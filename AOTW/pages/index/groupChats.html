@@ -489,7 +489,7 @@
 			function initWebSocket() {
 				//判断当前浏览器是否支持WebSocket
 				if('WebSocket' in window) {
-					websocket = new WebSocket("ws://gdqy.soft16309.aotw.ngrok.xiaomiqiu.cn/AOTW/websocket/" + localStorage.getItem('sessionId'));
+					websocket = new WebSocket(wsContextPath +"/websocket/" + localStorage.getItem('sessionId'));
 				} else {
 					alert('Not support websocket')
 				}
