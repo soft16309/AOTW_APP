@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="../../css/mui.min.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/mui.indexedlist.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/index/deleteGroupMember.css"/>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">删除成员</h1>
+			<a id='done' class="mui-icon mui-pull-right">删除</a>
+		</header>
+		<div class="mui-content">
+			<div id='list' class="mui-indexed-list">
+				<div class="mui-indexed-list-search mui-input-row mui-search">
+					<input type="search" class="mui-input-clear mui-indexed-list-search-input" placeholder="搜索用户">
+				</div>
+				<div class="mui-indexed-list-bar" id="indexListBar">
+					
+				</div>
+				<div class="mui-indexed-list-alert"></div>
+				<div class="mui-indexed-list-inner">
+					<div class="mui-indexed-list-empty-alert">没有找到匹配的成员</div>
+					<ul class="mui-table-view" id="dataList">
+						
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<script type="text/javascript" src="../../js/mui.min.js" ></script>
+		<script type="text/javascript" src="../../js/mui.indexedlist.js" ></script>
+		<script type="text/javascript" src="../../js/serverUrl.js" ></script>
+		<script type="text/javascript" charset="utf-8">
+			//索引列表
+			var INDEX_LIST = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 
+				'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+			
+			var currentView;
+			var isRemoveMember = false;		//判断是否有删除成员
+			
+			mui.init({
+				beforeback: function(){
+					if (isRemoveMember) {
+						var groupInfoView = plus.webview.getWebviewById("groupInfo.html");
+						mui.fire(groupInfoView, 'refreshPage', {});
+					}
+			        return true;
+			   }
+			});
+			mui.plusReady(function() {
+				currentView = plus.webview.currentWebview();
+		
+				var header = document.querySelector('header.mui-bar');
+				var list = document.getElementById('list');
+				var done = document.getElementById('done');
+				
+				initIndexBar();
+				//必须放在new mui.IndexedList(list);前面，否则会导致创建的索引为空
+				createItem(dataGrouping(currentView.groupMember));
+				
+				//calc hieght
+				list.style.height = (document.body.offsetHeight - header.offsetHeight) + 'px';
+				
+				//create
+				window.indexedList = new mui.IndexedList(list);
+				
+				//done event
+				done.addEventListener('tap', function() {
+					var checkboxArray = [].slice.call(list.querySelectorAll('input[type="checkbox"]'));
+					var checkedValues = [];
+					var checkedNodes = [];
+					checkboxArray.forEach(function(box) {
+						if (box.checked) {
+							checkedValues.push(box.parentNode.innerText);
+							checkedNodes.push(box.parentNode.parentNode.parentNode);
+						}
+					});
+					if (checkedValues.length > 0) {
+//						mui.alert('你选择了: ' + checkedValues);
+						var btnArray = ['取消', '<span style="color:#cf2d28;">确定</span>'];
+						mui.confirm('确定将选中成员移出群聊吗？', '提示', btnArray, function(e) {
+							if (e.index != 0) {
+								mui.ajax({
+									url : contextPath + "/group/deleteGroupMembers.do",
+									data : {
+										usernames : checkedValues.join(','), 
+										groupId : currentView.groupId
+									},
+									success : function(r) {
+										if (r.isOk == "Y") {
+											removeMemberItem(checkedNodes);
+											mui.toast("已成功移除");
+											isRemoveMember = true;
+										} else {
+											alert(r.msg);
+										}
+									}
+								})
+							}
+						}, "div");
+						
+					} else {
+						mui.alert('你没有选择任何用户！');
+					}
+				}, false);
+				mui('.mui-indexed-list-inner').on('change', 'input', function() {
+					var count = list.querySelectorAll('input[type="checkbox"]:checked').length;
+					var value = count ? "删除(" + count + ")" : "删除";
+					done.innerHTML = value;
+				});		
+			});
+								
+			function initIndexBar() {
+				var indexListBar = document.getElementById("indexListBar");
+				var content = "";
+				for (var i=0; i<INDEX_LIST.length; i++) {
+					content = content + "<a>" + INDEX_LIST[i] + "</a>"
+				}
+				indexListBar.innerHTML = content;
+			}
+			
+			function dataGrouping(data){
+				var result = {};	//以键值对形式存放{"A" : [{数据}]}
+				for (var i=1; i<data.length; i++) {
+					var index = data[i].username[0].toUpperCase();
+					var groupingData = result[index];
+					data[i].image = contextPath + data[i].image;
+					if (groupingData) {
+						groupingData.push(data[i]);
+					} else {
+						groupingData = [data[i]];
+					}
+					result[index] = groupingData;
+				}
+				return result;
+			}
+			
+			//创建每一项
+			function createItem(data) {
+				var table = document.getElementById("dataList");
+				var content = "";
+				for (var i=0; i<INDEX_LIST.length; i++) {
+					var groupingData = data[INDEX_LIST[i]];
+					if (groupingData) {
+						content = content + '<li data-group="' + INDEX_LIST[i] + '" class="mui-table-view-divider mui-indexed-list-group">'+INDEX_LIST[i]+'</li>';
+						for (var j=0; j<groupingData.length; j++) {
+							content = content + 
+									'<li data-value="' + groupingData[j].username + '" data-tags="' + groupingData[j].username + '" class="mui-table-view-cell mui-indexed-list-item mui-checkbox mui-right">' +
+										'<a href="javascript:;">' + 
+								            '<img class="mui-media-object mui-pull-left" src="'+groupingData[j].image+'">' +
+								            '<div class="mui-media-body">' + 
+								               	'<input type="checkbox" />' + groupingData[j].username + 
+								            '</div>' + 
+								        '</a>'
+									'</li>';
+						}
+					}
+				}
+				table.innerHTML = content;
+			}
+			
+			//移除删除成功的成员节点
+			function removeMemberItem(checkedNodes) {
+				var table = document.getElementById("dataList");
+				for (var i=0; i<checkedNodes.length; i++) {
+					table.removeChild(checkedNodes[i]);
+				}
+			}
+		</script>
+	</body>
+
+</html>

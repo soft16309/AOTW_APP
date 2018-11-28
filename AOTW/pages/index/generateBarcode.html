@@ -1,0 +1,145 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../../css/index/generateBarcode.css"/>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav header">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">群二维码</h1>
+			<a class="mui-icon mui-icon-more-filled mui-pull-right" id="rightMenu"></a>
+		</header>
+		
+		<div class="mui-content">
+			<div id="container">
+			    <div id="mainContent">
+			    	<ul class="mui-table-view">
+			    	    <li class="mui-table-view-cell mui-media">
+			    	        <a href="javascript:;">
+			    	            <img class="mui-media-object mui-pull-left" id="icon" src="http://192.168.56.1:8080/AOTW/img/defaultImg.png">
+			    	            <div class="mui-media-body" style="line-height: 40px;" id="groupName">
+			    	               	群名
+			    	            </div>
+			    	        </a>
+			    	    </li>
+			    	</ul>
+			    	
+			    	<div id="qrcode"></div>
+			    	<p style="text-align: center;line-height: 40px;">扫描二维码加入群聊</p>
+			    </div>
+		    </div>
+		</div>
+		
+		<div id="topPopover">
+			
+		</div>
+		
+		<script src="../../js/mui.min.js"></script>
+		<script type="text/javascript" src="../../js/qrcode.js" ></script>
+		<script type="text/javascript" src="../../js/html2canvas.min.js" ></script>
+		<script type="text/javascript" src="../../js/serverUrl.js" ></script>
+		<script type="text/javascript">
+			mui.init()
+			
+			mui.plusReady(function() {
+				init();
+			});
+			
+			
+			function init() {
+				var groupInfo = plus.webview.currentWebview().groupInfo;
+				document.getElementById('groupName').innerText = groupInfo.name;
+				var headImg = document.getElementById('icon');
+				headImg.src = contextPath + groupInfo.image;
+				
+				var screenheight = window.screen.height;
+				var statusbarHeight = plus.navigator.getStatusbarHeight();
+				var headHeight = document.querySelector(".mui-bar.mui-bar-nav.header").clientHeight;
+				var mainContent = document.getElementById('mainContent');
+				var contentWidth = mainContent.clientWidth;
+				document.querySelector(".mui-content").style.height = (screenheight - headHeight - statusbarHeight) +  "px";
+			
+				var qrcode = new QRCode(document.getElementById("qrcode"), {
+			        width : (contentWidth*5/7), //设置宽高
+			        height : (contentWidth*5/7)
+			    });
+			
+				var url = contextPath + "/group/getGroupById.do?groupId=" + groupInfo.id;
+			    qrcode.makeCodeWithImg(url, {
+			    	img : headImg
+			    });
+			    
+			    var contentHeight = mainContent.clientHeight;
+				mainContent.style.height = contentHeight + "px";
+				
+				var marginTop = (screenheight-contentHeight-headHeight - statusbarHeight)/2;
+//				mainContent.style.marginTop = marginTop + "px";
+				
+				document.getElementById("container").style.paddingTop = marginTop + "px";
+				document.getElementById("container").style.paddingBottom = marginTop + "px";
+			}
+					
+			//绑定右边菜单按钮
+			document.getElementById('rightMenu').addEventListener('tap', function(event) {
+				var btnArray = [{
+					title: "保存到相册"
+				}];
+				plus.nativeUI.actionSheet({
+					cancel: "取消",
+					buttons: btnArray
+				}, function(e) {
+					var index = e.index;
+					switch (index) {
+						case 0:
+							break;
+						case 1:
+							generatePicture();
+							break;
+					}
+				});
+			});
+			
+			//生成图片并保存到本地相册
+			function generatePicture() {
+				//useCORS:允许跨域
+				html2canvas(document.querySelector('#container'),{useCORS:true}).then(function(canvas) {
+				    saveBase64Img(new Date().getTime(), 'png', canvas.toDataURL(), 50, function() {})
+				});
+			}
+			
+			function saveBase64Img(filename, format, base64, quality, callback) {
+		        quality = quality || 10;
+		        callback = callback || mui.noop;
+		        var bitmap = new plus.nativeObj.Bitmap();
+		        // 从本地加载Bitmap图片
+		        bitmap.loadBase64Data(base64, function() {
+		            bitmap.save("_doc/" + filename + "." + format, {
+		                overwrite: true,
+		                quality: quality
+		            }, function(i) {
+		            	plus.gallery.save(i.target,function(d){
+                            //销毁Bitmap图片
+                            bitmap.clear();
+                            mui.toast('保存成功！')
+                        }, function(e){
+                            //销毁Bitmap图片
+                            bitmap.clear();
+                        });
+		            }, function(e) {
+		                console.log('保存图片失败：' + JSON.stringify(e));
+		            });
+		        }, function(e) {
+		            console.log('加载图片失败：' + JSON.stringify(e));
+		        });
+		    }
+			
+		</script>
+	</body>
+
+</html>

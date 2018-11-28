@@ -1,0 +1,44 @@
+.groupname{
+	color: #fff;
+	font-size: 25px;
+	text-align: center;
+	margin-top: 10px;
+}
+#div-chat{
+	width: 100%;
+	position:fixed;
+	bottom: 0;
+	right: 0;
+	left: 0;
+	background-color: #ACACB4;
+	padding:3px 0;	
+}
+#div-chat input{
+	width: 80%;
+	height: 30px;
+	border-radius: 6px;
+}
+#div-chat .mui-icon-plus-filled{
+	font-size: 30px;
+	color: #FFFFFF;
+}
+#div-chat #chat-send{
+	border-radius: 6px;
+	font-weight: bold;
+	background-color: #007AFF;
+	color: #FFFFFF;
+}
+.div-btn{
+	height:200px;
+}
+.chat-btn{
+	width: 65px;
+	height: 65px;
+	margin-top: 10px;
+	margin-left: 17px;
+	border-radius: 20px;
+	font-size: 11px;
+}
+.div-btn span{
+	font-size:35px;
+}

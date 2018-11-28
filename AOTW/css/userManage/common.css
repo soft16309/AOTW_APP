@@ -1,0 +1,51 @@
+body {
+	background-image: url(../../images/u9.png);
+	background-repeat: no-repeat;
+	background-size: cover;
+}
+#main {
+	text-align: center;
+	margin-top: 130px;
+}
+#main img{
+	margin-bottom: 60px;
+}
+
+#form-div .mui-icon {
+	color: white;
+	font-size: 32px;
+	padding-right: 8px;
+}
+#form-div {
+	width: 200px;
+	margin: 20px auto;
+}
+#form-div input {
+	border-radius: 6px;
+	width: 160px;
+	height: 30px;
+}
+#form-div table td{
+	padding: 8px 2px;
+	padding-left:0 ;
+}
+
+#form-div a {
+	color: #fff;
+	float: right;
+}
+#menu {
+	margin-top: 100px;
+	margin-left: 20px;
+}
+
+#menu button{
+	width: 88px;
+	height: 38px;
+	font-weight: bold;
+	font-size: 1.1em;
+	margin: 0 20px;
+}
+#form-div table tr td:first-child{
+	vertical-align: top;
+}

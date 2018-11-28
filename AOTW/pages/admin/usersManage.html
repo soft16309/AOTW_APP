@@ -1,0 +1,115 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>用户管理</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../../css/admin/common.css"/>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav header">
+		    <a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+		    <h1 class="mui-title">用户管理</h1>
+		</header>
+		
+		<div class="mui-content">
+		    <div class="mui-input-row mui-search">
+				<input type="search" id="searchInput" class="mui-input-clear" placeholder="请输入用户名" />
+			</div>
+			
+			<div id="mainContent"></div>
+			
+			<script id="user-template" type="text/html">
+				<% if(userList && userList.length > 0) { %>
+				<ul class="mui-table-view">
+					<% for(var i in userList){ var user=userList[i];var isCurrentUser=(user.username==currentUser.username); %>
+						<li class="mui-table-view-cell mui-media">
+					        <a href="javascript:;">
+					            <img class="mui-media-object mui-pull-left" src="<%=(contextPath + user.image)%>">
+					            <div class="mui-media-body">
+					               <div class="mui-input-row">
+									    <label><%=(user.username)%><%=(isCurrentUser ? '（我）' : '')%></label>
+									    <div class="mui-switch <%=(user.status==1 ? 'mui-active' : '') %> <%=(isCurrentUser ? 'mui-disabled' : '')%>" userId="<%=(user.username)%>">
+											<div class="mui-switch-handle"></div>
+										</div>
+									</div>
+					            </div>
+					        </a>
+					    </li>
+				    <% } %>
+			    </ul>
+			    <% } else { %>
+			    	<div style="text-align: center;">没有找到匹配的用户！</div>
+				<% } %>
+			</script>
+		</div>
+		
+		<script src="../../js/mui.min.js"></script>
+		<script src="../../js/arttmpl.js"></script>
+		<script type="text/javascript" src="../../js/serverUrl.js" ></script>
+		<script type="text/javascript">
+			var currentUser = JSON.parse(localStorage.getItem('user'));
+			
+			mui.init()
+			
+			mui.ready(function(){
+				//通过输入框清空按钮清空输入时清空所有显示的群内容（注意这里用click没有效果，需要用tap）
+				document.querySelector(".mui-icon.mui-icon-clear").addEventListener("tap", function(){
+					document.getElementById('mainContent').innerHTML = template('user-template', {});
+				})
+			})
+			
+			document.getElementById("searchInput").oninput = function() {
+				var name = this.value;
+				if (name.trim() == "") {
+					document.getElementById('mainContent').innerHTML = template('user-template', {});
+					return;
+				}
+				mui.ajax({
+					url : contextPath + "/user/fuzzySearchByUserName.do?username=" + name,
+					success : function(r) {
+						if (r.isOk == "Y") {
+							document.getElementById('mainContent').innerHTML = template('user-template', {
+								"userList": r.data.userList,
+								"contextPath" : contextPath,
+								"currentUser" : currentUser
+							});
+							
+							bindSwitchesListener();
+						} else {
+							alert(r.msg);
+						}
+					}
+				})
+			}
+						
+			function bindSwitchesListener() {
+				mui('.mui-content .mui-switch').each(function() { //循环所有toggle
+					//动态绑定时需要自行初始化开关按钮
+					mui(this).switch();
+					this.addEventListener('toggle', function(event) {
+						//event.detail.isActive 可直接获取当前状态
+						var status = event.detail.isActive ? 1 : 0;
+						var username = this.getAttribute('userId');
+						mui.ajax({
+							url : contextPath + "/user/updateUserStatus.do",
+							data : {
+								status : status,
+								username : username
+							},
+							success : function(r) {
+								if (r.isOk == "Y") {
+									mui.toast('操作成功！');
+								}
+							}
+						})
+					});
+				});
+			}
+		</script>
+	</body>
+
+</html>

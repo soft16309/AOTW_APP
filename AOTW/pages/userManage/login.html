@@ -1,0 +1,155 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../../css/userManage/common.css" />
+	</head>
+
+	<body>
+		<div id="main">
+			<img src="../../images/header.png" />
+			<div id="form-div">
+				<form>
+					<table>
+						<tr>
+							<td><span class="mui-icon mui-icon-contact"></span></td>
+							<td><input type="text" id="username" name="userName" placeholder="登录名" /></td>
+						</tr>
+						<tr>
+							<td><span class="mui-icon mui-icon-locked"></span></td>
+							<td><input id="password" type="password" name="password" placeholder="登录密码" /></td>
+						</tr>
+					</table>
+				</form>
+				<a id="forgetPassword" href="javascript:void(0)">忘记密码?</a>
+			</div>
+
+			<div id="menu">
+				<button type="button" class="mui-btn mui-btn-green">注册</button>
+				<button type="button" data-loading-text="登录中" class="mui-btn mui-btn-green">登录</button>
+			</div>
+		</div>
+
+		<script src="../../js/mui.min.js"></script>
+		<script src="../../js/serverUrl.js"></script>
+		<script type="text/javascript">
+			var currentView;
+			
+			mui.init({
+				beforeback: function(){
+					clickNum ++;
+					if (clickNum > 1) {
+						plus.runtime.quit();
+					} else {
+						plus.nativeUI.toast('再按一次退出应用');
+						setTimeout(function(){
+							clickNum = 0;
+						},3000);
+					}
+					return false;
+				}
+			});
+
+			mui.plusReady(function() {
+				currentView = plus.webview.currentWebview();
+				if(plus.networkinfo.getCurrentType() == plus.networkinfo.CONNECTION_NONE) {
+					mui.toast("网络异常，请检查网络设置！");
+				}
+			});
+
+			init();
+			
+			function init() {
+				var buttons = document.getElementById("menu").getElementsByTagName("button");
+				var regButton = buttons[0];
+				var loginButton = buttons[1];
+				regButton.onclick = function() {
+					mui.openWindow({
+						url: "register.html",
+						id: "register.html"
+					})
+				}
+				loginButton.onclick = function() {
+					logoutJS("SESSION_LOGIN_USERNAME");
+           			logoutJS("SESSION_LOGIN_PASSWORD");
+					clearOtherWebViews();
+					var username = document.getElementById('username').value;
+					if(username == "" || username.trim() == "") {
+						mui.toast("请输入用户名！");
+						document.getElementById('username').value = "";
+						return;
+					}
+					var password = document.getElementById("password").value;
+					if(password == "" || password.trim() == "") {
+						mui.toast("请输入密码！");
+						document.getElementById('password').value = "";
+						return;
+					}
+					mui.ajax({
+						url:  contextPath + '/user/login.do',
+						type: 'post',
+						async: false,
+						data: {
+							"username": username,
+							"password": password,
+							isRemeber: true
+						},
+						success: function(r) {
+							var user = r.data.user;
+							if(r.isOk == "Y" && user != null) {
+								localStorage.setItem("user", JSON.stringify(user));
+								localStorage.setItem("sessionId", r.data.sessionId);
+								mui.openWindow({
+									createNew: true,
+									url: "../index/index.html",
+									id: "index.html"
+								});
+							} else {
+								alert(r.msg);
+							}
+						}
+					});
+
+				}
+
+				document.getElementById("forgetPassword").onclick = function() {
+					mui.openWindow({
+						createNew: true,
+						url: "resetPassword.html",
+						id: "resetPassword.html"
+					})
+				}
+			}
+			
+			function clearOtherWebViews() {
+				var allViews = plus.webview.all();
+				for (var i=0; i<allViews.length; i++) {
+					if(allViews[i].id != currentView.id) {
+						if (allViews[i].id == 'groupChats.html') {
+							mui.fire(allViews[i], 'closeWebSocket', {})
+						}
+						plus.webview.close(allViews[i]);
+					}
+				}
+			}
+			
+			window.addEventListener('refreshPage', function(event) {
+            	location.reload();
+            });
+            
+            function logoutJS(cookieName) {
+		        var date = new Date();
+		        date.setTime(date.getTime() - 10000);
+		        document.cookie = "cookiename" + "=v; expire=" + date.toGMTString()
+		                + "; path=/";
+		    }
+            
+            
+		</script>
+	</body>
+
+</html>

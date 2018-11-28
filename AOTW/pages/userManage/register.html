@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../../css/userManage/common.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/userManage/header.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/userManage/register.css" />
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav header">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">登录</h1>
+		</header>
+		<div id="main">
+			<img src="../../images/header.png" />
+			<div id="form-div">
+				<form id="regForm">
+					<table>
+						<tr>
+							<td><span class="mui-icon mui-icon-contact"></span></td>
+							<td><input id="username" name="username" type="text" placeholder="设置登录名" /></td>
+						</tr>
+						<tr>
+							<td><span class="mui-icon mui-icon-locked"></span></td>
+							<td><input id="password" name="password" type="password" placeholder="设置密码" /></td>
+						</tr>
+						<tr>
+							<td><span class="mui-icon mui-icon-locked"></span></td>
+							<td><input id="rePass" name="rePass" type="password" placeholder="确认密码" /></td>
+						</tr>
+						<tr>
+							<td><span class="mui-icon mui-icon-email"></span></td>
+							<td><input id="email" type="text" name="email" placeholder="设置邮箱" /></td>
+						</tr>
+					</table>
+				</form>
+			</div>
+
+			<div id="menu">
+				<button type="button" class="mui-btn mui-btn-green">注册账号</button>
+			</div>
+		</div>
+
+		<script src="../../js/mui.min.js"></script>
+		<script type="text/javascript" src="../../js/serverUrl.js" ></script>
+		<script>
+			mui.init();
+			var regBtn = document.getElementById("menu").getElementsByTagName("button")[0];
+			var usernameText = document.getElementById("username");
+			var passwordText = document.getElementById("password");
+			var rePassText = document.getElementById("rePass");
+			var emailText = document.getElementById("email");
+			regBtn.onclick = function() {
+				if (!validate()) {
+					return;
+				}
+				
+				mui.ajax({
+					url: contextPath + '/user/quickRegister.do',
+					type: 'post',
+					async : false,
+					data: {
+						user : {
+							"username" : usernameText.value, 
+							"password" : passwordText.value,
+							"email"	: emailText.value
+						}
+					},
+					success: function(r) {
+						if (r.data.isOk == "Y") {
+							mui.toast('注册成功！');
+							mui.openWindow({
+								url : "login.html",
+								id : "login.html"
+							})
+						} else {
+							mui.toast(r.msg);
+						}
+					},
+					error : function(xhr,type,errorThrown){
+		                console.log(errorThrown);
+		            }
+				});
+			}
+			
+			function validate() {
+				if (usernameText.value.trim() == "") {
+					usernameText.value = "";
+					mui.toast("登录名不能为空！");
+					return false;
+				}
+				if (passwordText.value == "") {
+					mui.toast("密码不能为空！");
+					return false;
+				}
+				if (rePassText.value != passwordText.value) {
+					mui.toast("两次输入密码不一致！");
+					return false;
+				}
+				if (emailText.value.trim() == "") {
+					mui.toast("邮箱地址不能为空！");
+					return false;
+				}
+				if (!(/^[A-Za-z\d]+([-_.][A-Za-z\d]+)*@([A-Za-z\d]+[-.])+[A-Za-z\d]{2,4}$/.test(emailText.value))) {
+					mui.toast("请输入有效的邮箱地址！");
+					return false;
+				}
+				return true;
+			}
+		</script>
+	</body>
+
+</html>

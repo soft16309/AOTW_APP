@@ -1,0 +1,15 @@
+CACHE MANIFEST
+
+#缓存资源
+CACHE:
+/index/index.html
+/index/group.html
+/index/groupChats.html
+
+#不缓存资源
+NETWORK:
+*
+
+#访问缓存错误处理
+FALLBACK:
+/index/index.html

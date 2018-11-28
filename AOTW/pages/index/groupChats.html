@@ -1,0 +1,711 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../../css/icons-extra.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/index/common.css" />
+		<link rel="stylesheet" href="../../css/index/groupChats.css" />
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav header">
+			<h1 class="mui-title">群聊</h1>
+			<a href="#topPopover">+</a>
+		</header>
+
+		<div class="mui-content">
+			<div id="refreshContainer">
+				<div id="searchBtn" class="mui-input-row mui-search" style="margin-bottom: 0;">
+					<span class="mui-icon mui-icon-search"></span>
+					<span>搜索</span>
+				</div>
+			
+				<ul class="mui-table-view" id="messageList">
+	
+				</ul>
+			</div>
+		</div>
+		
+		<div id="topPopover" class="mui-popover">
+			<div class="mui-popover-arrow"></div>
+			<ul class="mui-table-view" id="topMenu">
+				<li class="mui-table-view-cell">创建群</li>
+				<li class="mui-table-view-cell">加入群</li>
+				<li class="mui-table-view-cell">扫一扫</li>
+			</ul>
+		</div>
+		
+		<div id="longtapPopover" class="mui-popover">
+			<ul class="mui-table-view" id="longtapMenu">
+				<li class="mui-table-view-cell">删除</li>
+			</ul>
+		</div>
+		
+		<script src="../../js/mui.min.js"></script>
+		<script type="text/javascript" src="../../js/serverUrl.js" ></script>
+		<script type="text/javascript" src="../../js/commonHeader.js" ></script>
+		<script>
+			var currentLongTapElement;		//当前长按的节点
+			
+			mui.init({
+				gestureConfig: {
+					longtap: true
+				},
+				pullRefresh : {
+				    container:"#refreshContainer",//下拉刷新容器标识，querySelector能定位的css选择器均可，比如：id、.class等
+				    down : {
+				      	style:'circle',//必选，下拉刷新样式，目前支持原生5+ ‘circle’ 样式
+				      	height:'50px',//可选,默认50px.下拉刷新控件的高度,
+				      	range:'50px', //可选 默认100px,控件可下拉拖拽的范围
+				     	offset:'45px', //可选 默认0px,下拉刷新控件的起始位置
+				      	callback :function() {
+				      		location.reload();
+				     	}
+				    }
+			 	}
+			})
+			var websocket = null;
+			var currentUser = JSON.parse(localStorage.getItem('user'));
+			loadMessages();
+			
+			function loadMessages() {
+				loadReadMessages();
+				loadUnReadMessages();
+			}
+			
+			//加载已读消息
+			function loadReadMessages() {
+				//保存每一项为{type:"groupChat"/"singleChat", chatId : '聊天对象id'}
+				var readMessages = localStorage.getItem(currentUser.username + '_readMessages');
+				if (readMessages != null) {
+					readMessages = JSON.parse(readMessages);
+					for (var i=0; i<readMessages.length; i++) {
+						if (readMessages[i].type == "groupChat") {
+							var filename = "group" + readMessages[i].chatId;
+							loadLocalGroupChatMessages(filename, null);
+						} else {
+							loadLocalSingleChatMessages(readMessages[i].chatId, null);
+						}
+					}
+				}
+			}
+						
+			//从文件中加载单聊的消息显示在页面上（filename：文件名，unReadNum：未读的消息数）
+			function loadLocalSingleChatMessages(filename, unReadNum) {
+				var localFile = getMessageFromLocal(filename);
+				if (localFile.length > 0) {
+					var fromUser = localFile[localFile.length-1].from;
+					if (fromUser.username == currentUser.username) {
+						mui.ajax({
+							url: contextPath + "/user/findUser.do",
+							async: false,
+							data : {username : localFile[localFile.length-1].to_user},
+							success: function(r) {
+								if(r.isOk == "Y") {
+									fromUser = r.data.user;
+								}
+							}
+						});
+					}
+					var messageList = document.getElementById('messageList');
+					var messageElement = document.createElement('li');
+					messageElement.setAttribute("class", "mui-table-view-cell mui-media");
+					messageElement.setAttribute("userId", fromUser.username);
+					var messageContent = '<a href="javascript:;">';						
+					if (unReadNum != null) {
+						messageContent = messageContent + '<span class="mui-badge mui-badge mui-badge-danger">1</span>';
+					}
+					messageContent = messageContent + 
+						'<img class="mui-media-object mui-pull-left" src="' + contextPath + fromUser.image + '">' +
+						'<div class="mui-media-body">' +
+						fromUser.username +
+						'<p class="mui-ellipsis" style="width: 80%">' + getShowMsg(localFile[localFile.length-1]) + '</p>' +
+						'</div>' +
+						'</a>';
+					
+					messageElement.innerHTML = messageContent;
+					var firstElement = messageList.getElementsByTagName('li')[0];
+					messageList.insertBefore(messageElement, firstElement);
+
+					bindMessageListItem(messageElement, "userId");
+				}
+			}
+			
+			//从文件中加载群聊的消息显示在页面上（filename：文件名，unReadNum：未读的消息数）
+			function loadLocalGroupChatMessages(filename, unReadNum) {
+				var localFile = getMessageFromLocal(filename);
+				if (localFile.length > 0) {
+					var group = localFile[localFile.length-1].to_group;
+					var fromUser = localFile[localFile.length-1].from;
+					var messageList = document.getElementById('messageList');
+					var messageElement = document.createElement('li');
+					messageElement.setAttribute("class", "mui-table-view-cell mui-media");
+					messageElement.setAttribute("groupId", group.id);
+					var messageContent = '<a href="javascript:;">';
+					if (unReadNum != null) {
+						messageContent = messageContent + '<span class="mui-badge mui-badge mui-badge-danger">1</span>';
+					}
+					messageContent = messageContent + 
+						'<img class="mui-media-object mui-pull-left" src="' + contextPath + group.image + '">' +
+						'<div class="mui-media-body">' +
+						group.name +
+						'<p class="mui-ellipsis" style="width: 80%">';
+					
+					if (fromUser.username != currentUser.username) {
+						messageContent = messageContent + fromUser.username + "：";
+					}
+						 
+					messageContent = messageContent	+ getShowMsg(localFile[localFile.length-1]) + '</p>' +
+						'</div>' +
+						'</a>';
+					
+					messageElement.innerHTML = messageContent;
+					var firstElement = messageList.getElementsByTagName('li')[0];
+					messageList.insertBefore(messageElement, firstElement);
+
+					bindMessageListItem(messageElement, "groupId");
+				}
+			}
+			
+			//加载未读消息
+			function loadUnReadMessages() {
+				//保存每一项为{type:"groupChat"/"singleChat", chatId : '聊天对象id', unReadNum : '未读消息数'}
+				var unReadMessages = localStorage.getItem(currentUser.username + '_unReadMessages');
+				if (unReadMessages != null) {
+					unReadMessages = JSON.parse(unReadMessages);
+					for (var i=0; i<unReadMessages.length; i++) {
+						if (unReadMessages[i].type == "groupChat") {
+							var filename = "group" + unReadMessages[i].chatId;
+							loadLocalGroupChatMessages(filename, unReadMessages[i].unReadNum);
+						} else {
+							loadLocalSingleChatMessages(unReadMessages[i].chatId, unReadMessages[i].unReadNum);
+						}
+					}
+				}
+			}
+			
+			//更新未读消息的本地存储文件（type："groupChat/singleChat", chatId : "聊天对象id"， unReadNum : '未读消息数'）
+			function updateUnReadMessageFile(type, chatId, unReadNum) {
+				var unReadMessages = localStorage.getItem(currentUser.username + '_unReadMessages');
+				if (unReadMessages != null) {
+					unReadMessages = JSON.parse(unReadMessages);
+				} else {
+					unReadMessages = [];
+				}
+				var index = -1; //记住符合条件项的索引
+				for (var i=0; i<unReadMessages.length; i++) {
+					if (type==unReadMessages[i].type && chatId==unReadMessages[i].chatId) {
+						index = i;
+						break;
+					}
+				}
+				if (index > -1) {
+					var unReadMessage = unReadMessages[index];
+					unReadMessage.unReadNum += unReadNum;
+					unReadMessages.splice(index, 1);	//移除指定索引的项
+					unReadMessages.push(unReadMessage); //更新新消息数到本地文件
+				} else {
+					var unReadMessage = {type : type, chatId : chatId, unReadNum : unReadNum};
+					unReadMessages.push(unReadMessage);
+				}
+				localStorage.setItem(currentUser.username + '_unReadMessages', JSON.stringify(unReadMessages));
+			}
+			
+			//从名字为unReadMessage的文件中移除指定的元素
+			function removeElementFromUnReadMessageFile(type, chatId) {
+				var unReadMessages = localStorage.getItem(currentUser.username + '_unReadMessages');
+				if (unReadMessages != null) {
+					unReadMessages = JSON.parse(unReadMessages);
+					var index = -1; //记住符合条件项的索引
+					for (var i=0; i<unReadMessages.length; i++) {
+						if (type==unReadMessages[i].type && chatId==unReadMessages[i].chatId) {
+							index = i;
+							break;
+						}
+					}
+					if (index > -1) {
+						unReadMessages.splice(index, 1);	//移除指定索引的项
+					}
+					localStorage.setItem(currentUser.username + "_unReadMessages", JSON.stringify(unReadMessages));
+				}
+			}
+			
+			//更新已读消息的存储文件
+			function updateReadMessageFile(type, chatId) {
+				var readMessages = localStorage.getItem(currentUser.username + '_readMessages');
+				if (readMessages != null) {
+					readMessages = JSON.parse(readMessages);
+				}else {
+					readMessages = [];
+				}
+				var index = -1; //记住符合条件项的索引
+				for (var i=0; i<readMessages.length; i++) {
+					if (type==readMessages[i].type && chatId==readMessages[i].chatId) {
+						index = i;
+						break;
+					}
+				}
+				if (index > -1) {
+					readMessages.splice(index, 1);	//移除指定索引的项
+				} 
+				var readMessage = {type : type, chatId : chatId};
+				readMessages.push(readMessage);
+				
+				localStorage.setItem(currentUser.username + '_readMessages', JSON.stringify(readMessages));
+			}
+			
+			function generateMessageList(msg) {
+				if(msg.to_user) {
+					singleChat(msg);
+				} else if(msg.to_group) {
+					groupChat(msg);
+				}
+
+			}
+
+			function groupChat(msg) {
+				var messageList = document.getElementById('messageList');
+				var messageElements = messageList.getElementsByTagName('li');
+				var messageElement;
+				var fromUser = msg.from;
+				var group = msg.to_group;
+				
+				saveMessageToLocal(msg, "group"+group.id);
+				
+				if(messageElements != null && messageElements.length > 0) {
+					for(var i = 0; i < messageElements.length; i++) {
+						if(messageElements[i].getAttribute('groupId') == group.id) {
+							messageElement = messageElements[i];
+							break;
+						}
+					}
+				}
+
+				if(messageElement != null) {
+					var span = messageElement.getElementsByTagName('span');
+					if(span == null || span.length == 0) {
+						var msgNum = document.createElement('span');
+						msgNum.setAttribute('class', 'mui-badge mui-badge mui-badge-danger');
+						msgNum.innerText = 1;
+						messageElement.getElementsByTagName('a')[0].appendChild(msgNum);
+					} else {
+						var msgNum = span[0];
+						msgNum.innerText = parseInt(msgNum.innerText) + 1;
+					}
+
+					var msgContent = messageElement.getElementsByTagName('p')[0];
+
+					if (fromUser.username != currentUser.username) {
+						msgContent.innerText = fromUser.username + "：" + getShowMsg(msg);
+					} else {
+						msgContent.innerText = getShowMsg(msg);
+					}
+				} else {
+					messageElement = document.createElement('li');
+					messageElement.setAttribute("class", "mui-table-view-cell mui-media");
+					messageElement.setAttribute("groupId", group.id);
+					var messageContent = '<a href="javascript:;">' +
+						'<span class="mui-badge mui-badge mui-badge-danger">1</span>' +
+						'<img class="mui-media-object mui-pull-left" src="' + contextPath + group.image + '">' +
+						'<div class="mui-media-body">' +
+						group.name +
+						'<p class="mui-ellipsis" style="width: 80%">';
+					if (fromUser.username != currentUser.username) {
+						messageContent = messageContent + fromUser.username + "：";
+					}
+					messageContent = messageContent + getShowMsg(msg) + '</p>' +
+						'</div>' +
+						'</a>';
+					messageElement.innerHTML = messageContent;
+					var firstElement = messageList.getElementsByTagName('li')[0];
+					messageList.insertBefore(messageElement, firstElement);
+
+					bindMessageListItem(messageElement, "groupId");
+					bindMessageListLongtapListener();
+				}
+				updateUnReadMessageFile("groupChat", group.id, 1);
+				addMessageToChatWindow(msg, messageElement.getAttribute("groupId"));
+			}
+
+			//得到要展示的消息
+			function getShowMsg(msg) {
+				var message = "";
+				if(msg.fileType) {
+					switch(msg.fileType) {
+						case "image":
+							message = "[图片]";
+							break;
+						case "sound":
+							message = "[语音]";
+							break;
+					}
+				} else {
+					message = msg.msg;
+				}
+				return message;
+			}
+
+			function singleChat(msg) {
+				var messageList = document.getElementById('messageList');
+				var messageElements = messageList.getElementsByTagName('li');
+				var messageElement;
+//				var fromUser = msg.from;
+				var userId;		//保存文件的名字
+				var chatUser;	//聊天对象
+				if (currentUser.username == msg.from.username) {
+					userId = msg.to_user;
+					mui.ajax({
+						url: contextPath + "/user/findUser.do",
+						async: false,
+						data : {username : msg.to_user},
+						success: function(r) {
+							if(r.isOk == "Y") {
+								chatUser = r.data.user;
+							}
+						}
+					});
+				} else {
+					userId = msg.from.username;
+					chatUser = msg.from;
+				}
+				
+				saveMessageToLocal(msg, userId);
+				
+				if(messageElements != null && messageElements.length > 0) {
+					for(var i = 0; i < messageElements.length; i++) {
+						if(messageElements[i].getAttribute('userId') == userId) {
+							messageElement = messageElements[i];
+							break;
+						}
+					}
+				}
+
+				if(messageElement != null) {
+					var span = messageElement.getElementsByTagName('span');
+					if(span == null || span.length == 0) {
+						var msgNum = document.createElement('span');
+						msgNum.setAttribute('class', 'mui-badge mui-badge mui-badge-danger');
+						msgNum.innerText = 1;
+						messageElement.getElementsByTagName('a')[0].appendChild(msgNum);
+					} else {
+						var msgNum = span[0];
+						msgNum.innerText = parseInt(msgNum.innerText) + 1;
+					}
+
+					var msgContent = messageElement.getElementsByTagName('p')[0];
+					msgContent.innerText = getShowMsg(msg);
+				} else {
+					messageElement = document.createElement('li');
+					messageElement.setAttribute("class", "mui-table-view-cell mui-media");
+					messageElement.setAttribute("userId", userId);
+					var messageContent = '<a href="javascript:;">' +
+						'<span class="mui-badge mui-badge mui-badge-danger">1</span>' +
+						'<img class="mui-media-object mui-pull-left" src="' + contextPath + chatUser.image + '">' +
+						'<div class="mui-media-body">' +
+						chatUser.username +
+						'<p class="mui-ellipsis" style="width: 80%">' + getShowMsg(msg) + '</p>' +
+						'</div>' +
+						'</a>';
+					messageElement.innerHTML = messageContent;
+					var firstElement = messageList.getElementsByTagName('li')[0];
+					messageList.insertBefore(messageElement, firstElement);
+
+					bindMessageListItem(messageElement, "userId");
+					bindMessageListLongtapListener();
+				}
+				
+				updateUnReadMessageFile("singleChat", userId, 1);
+				addMessageToChatWindow(msg, messageElement.getAttribute("userId"));
+			}
+
+			//保存消息到本地
+			function saveMessageToLocal(msg, filename) {
+				var localfilename = currentUser.username + "_file_" + filename;
+				var localFile = localStorage.getItem(localfilename);
+				if (localFile) {
+					localFile = JSON.parse(localFile);
+					localFile.push(msg);
+				} else {
+					localFile = [msg];
+				}
+				localStorage.setItem(localfilename, JSON.stringify(localFile));
+			}
+
+			function getMessageFromLocal(filename) {
+				var localfilename = currentUser.username + "_file_" + filename;
+				var localFile = localStorage.getItem(localfilename);
+				if (!localFile) {
+					localFile = [];
+					return localFile;
+				}
+				return JSON.parse(localFile);
+			}
+
+			function bindMessageListItem(obj, attribute) {
+				obj.onclick = function() {
+					var id = this.getAttribute(attribute);
+					var localFile;
+					var chatObj;
+					var to_user = null;
+					var to_group = null;
+					if (attribute == "userId") {
+						localFile = getMessageFromLocal(id);
+						if (currentUser.username == localFile[0].to_user) {
+							chatObj = localFile[0].from.username;
+							to_user = localFile[0].from.username;
+						} else {
+							chatObj = localFile[0].to_user;
+							to_user = localFile[0].to_user;
+						}
+						
+					} else {
+						localFile = getMessageFromLocal("group"+id);
+						chatObj = localFile[0].to_group.name;
+						to_group = localFile[0].to_group;
+					}
+										
+					mui.openWindow({
+						url : "chat.html",
+						id: "chat.html",
+					 	extras: {
+					 		localFile : localFile,
+					 		chatObj : chatObj,
+					 		chatId : id,
+					 		chatAttribute : attribute,	//聊天对象保存的属性
+					 		to_user : to_user,
+					 		to_group : to_group
+					 	}
+					})
+				}
+			}
+
+//			localStorage.clear();
+			initWebSocket();
+
+			function initWebSocket() {
+				//判断当前浏览器是否支持WebSocket
+				if('WebSocket' in window) {
+					websocket = new WebSocket("ws://gdqy.soft16309.aotw.ngrok.xiaomiqiu.cn/AOTW/websocket/" + localStorage.getItem('sessionId'));
+				} else {
+					alert('Not support websocket')
+				}
+
+				//连接发生错误的回调方法
+				websocket.onerror = function() {
+					console.log("error");
+				};
+
+				//连接成功建立的回调方法
+				websocket.onopen = function(event) {
+					console.log("open");
+					//定时向服务器发送心跳帧
+					setInterval(function(){
+						if (websocket) {
+							websocket.send("1");
+						}
+					}, 1000*60*10);
+				}
+
+				//接收到消息的回调方法
+				websocket.onmessage = function(event) {
+					var data = JSON.parse(event.data);
+					addMessageElement(data);
+//					addMessageToChatWindow(data);
+				}
+
+				//连接关闭的回调方法
+				websocket.onclose = function(e) {
+					console.log("close websocket");
+					console.log("code:" + e.code);
+					console.log("reason:" + e.reason);
+				}
+
+				//监听窗口关闭事件，当窗口关闭时，主动去关闭websocket连接，防止连接还没断开就关闭窗口，server端会抛异常。
+				window.onbeforeunload = function() {
+					websocket.close();
+				}
+
+				
+				//关闭连接
+				function closeWebSocket() {
+					websocket.close();
+				}
+
+				function addMessageElement(data) {
+					if (data instanceof Array) { //离线接收到的数据
+						for(var i = 0; i < data.length; i++) {
+							var msg = JSON.parse(data[i]);
+							generateMessageList(msg);
+						}
+					} else {
+						generateMessageList(data);
+					}
+					
+					//添加消息提示到底部标签栏
+					addMessageTip2Index();
+				}
+			}
+			
+			//添加新消息到打开的聊天窗口
+			function addMessageToChatWindow(data, chatId) {
+				var chatWindow = plus.webview.getWebviewById('chat.html');
+				if (chatWindow != null) {
+					if (chatWindow.chatId == chatId && data.from.username != currentUser.username) {
+						mui.fire(chatWindow, 'receiveData', {
+                        	data : data
+                   		});
+					}
+				}
+			}
+			
+			//移除新消息右边的提示
+			function removeNewMessageTip(attr, attrValue) {
+				var messageElements = messageList.getElementsByTagName('li');
+				for(var i = 0; i < messageElements.length; i++) {
+					if(messageElements[i].getAttribute(attr) == attrValue) {
+						var span = messageElements[i].getElementsByTagName('span');
+						if(span != null && span.length > 0) {
+							messageElements[i].getElementsByTagName('a')[0].removeChild(span[0]);
+						}
+						break;
+					}
+				}
+			}
+			
+			//添加上一个页面自定义事件监听,已接收消息
+            window.addEventListener('removeNewMessageTip', function(event) {
+                var attr = event.detail.attr;
+                var attrValue = event.detail.attrValue;
+                removeNewMessageTip(attr, attrValue);
+                if (attr == "userId") {
+                	removeElementFromUnReadMessageFile("singleChat", attrValue);
+                	updateReadMessageFile("singleChat", attrValue);
+                } else {
+                	removeElementFromUnReadMessageFile("groupChat", attrValue);
+                	updateReadMessageFile("groupChat", attrValue);
+                }
+                
+                //更新底部消息提示
+                addMessageTip2Index();
+            });
+            
+            //添加上一个页面自定义事件监听,已接收消息
+            window.addEventListener('sendNewMessage', function(event) {
+                var msg = event.detail.msg;
+                var attr = event.detail.attr;
+                var attrValue = event.detail.attrValue;
+                var chatId = event.detail.chatId;
+                console.log(JSON.stringify(msg));
+                websocket.send(JSON.stringify(msg));
+                if (attr == "groupId") {
+                	groupChat(msg);
+                } else {
+                	singleChat(msg);
+//              	sendMyMessage(msg, attr, attrValue, chatId);
+                }
+            });
+           
+            //用于单聊时用户自己发送的消息显示
+            function sendMyMessage(msg, attr, attrValue, chatId) {
+            	var messageList = document.getElementById('messageList');
+				var messageElements = messageList.getElementsByTagName('li');				
+				
+				if(messageElements != null && messageElements.length > 0) {
+					for(var i = 0; i < messageElements.length; i++) {
+						if(messageElements[i].getAttribute(attr) == attrValue) {
+							var msgContent = messageElements[i].getElementsByTagName('p')[0];
+							msgContent.innerText = getShowMsg(msg);
+							saveMessageToLocal(msg, chatId)
+							break;
+						}
+					}
+				}
+            }
+            
+            //绑定左滑事件
+           	window.addEventListener("swipeleft", function(e) {
+                //默认滑动角度在-45度到45度之间，都会触发右滑菜单，为避免误操作，可自定义限制滑动角度；
+                if (Math.abs(e.detail.angle) > 170) {
+                	var index = plus.webview.getWebviewById('index.html');
+                	plus.webview.getWebviewById('groups.html').show('slide-in-right');
+					plus.webview.currentWebview().hide('slide-out-left');
+					mui.fire(index, 'selectTab', {
+						tabIndex : 1
+					});
+					mui.fire(index, 'updateIndexTabHref', {
+						href : "#"
+					});
+                }
+            });
+            
+            window.addEventListener('refreshPage', function(event) {
+            	location.reload();
+            });
+            
+            window.addEventListener('closeWebSocket', function(event) {
+                websocket.close();
+            });
+            
+            function addMessageTip2Index() {
+            	var messageList = document.getElementById('messageList');
+				var messageElements = messageList.getElementsByTagName('li');				
+				var messageNum = 0;		//新消息数
+				
+				if(messageElements != null && messageElements.length > 0) {
+					for(var i = 0; i < messageElements.length; i++) {
+						var span = messageElements[i].getElementsByTagName('span');
+						if(span != null && span.length > 0) {
+							messageNum += parseInt(span[0].innerText);
+						}
+					}
+				}
+				
+				var indexView = plus.webview.getWebviewById('index.html');
+				mui.fire(indexView, 'addMessageTip', {
+					messageNum : messageNum
+				});
+            }
+            
+            //绑定长按删除事件
+            function bindMessageListLongtapListener() {
+            	mui("#messageList").on('longtap', 'li', function() {
+            		currentLongTapElement = this;
+	            	mui("#longtapPopover").popover('toggle', currentLongTapElement);
+	            });
+            }
+            bindMessageListLongtapListener();
+            initLongtapMenu();
+            function clearChatRecords(filename) {
+				var localfilename = currentUser.username + "_file_" + filename;
+				localStorage.removeItem(localfilename);
+			}
+            
+            function initLongtapMenu() {
+            	var longtapMenus = document.getElementById("longtapMenu").getElementsByTagName("li");
+            	var delBtn = longtapMenus[0];
+            	delBtn.addEventListener("tap", function() {
+            		var filename;
+            		mui('#longtapPopover').popover('hide');
+            		if (currentLongTapElement.getAttribute("userId")) {
+            			filename = currentLongTapElement.getAttribute("userId");
+            		} else {
+            			filename = "group" + currentLongTapElement.getAttribute("groupId");
+            		}
+            		var btnArray = ['取消', '<span style="color:#cf2d28;">删除</span>'];
+					mui.confirm('删除后，将清空该聊天的信息记录', '提示', btnArray, function(e) {
+						if (e.index != 0) {
+							clearChatRecords(filename);
+							currentLongTapElement.parentNode.removeChild(currentLongTapElement);
+						}
+					}, "div")
+            	})
+            }
+            
+		</script>
+	</body>
+
+</html>

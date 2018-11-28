@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../../css/icons-extra.css"/>
+		<link rel="stylesheet" href="../../css/index/invite.css" />
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav header">
+			<a class="mui-icon mui-action-back mui-pull-left">取消</a>
+		    <h1 class="mui-title">邀请成员</h1>
+		    <a class="mui-icon mui-pull-right" id="addGroupMember">添加</a>
+		</header>
+		
+		<div class="mui-content">
+			<div id="top">
+				<div class="mui-input-row mui-search">
+					<input type="search" id="searchInput" class="mui-input-clear" placeholder="请输入用户名" />
+				</div>
+				<button id="searchBtn">查找</button>
+				<div style="clear: both;"></div>
+			</div>
+		 	
+		 	<div id="mainContent"></div>
+		 	
+		 	<script id="user-template" type="text/html">
+		 		<% if(user != null ) { %>
+				    <ul class="mui-table-view">
+				    	<li class="mui-table-view-cell mui-media">
+				    		<a href="javascript:;">
+				    			<img class="mui-media-object mui-pull-left" src="<%=(user.image)%>">
+							    <div class="mui-media-body">
+								    <div class="mui-input-row mui-checkbox">
+										<label><%=(user.username)%></label>
+										<input id="checkbox" name="username" value="<%=(user.username)%>" type="checkbox" >
+									</div>
+								</div>
+							</a>
+						</li>
+					</ul>
+				<% } else { %>
+					<div style="text-align: center;">搜索的用户不存在！</div>
+				<% } %>
+			</script>
+		</div>
+		
+		<script src="../../js/mui.min.js"></script>
+		<script src="../../js/arttmpl.js"></script>
+		<script type="text/javascript" src="../../js/serverUrl.js" ></script>
+		<script type="text/javascript">
+			var currentUser = JSON.parse(localStorage.getItem('user'));
+			var currentView;
+			var isAddMember = false;	//是否添加了新成员
+			var user;	//找到的用户
+			
+			var searchInput = document.getElementById("searchInput");
+			
+			mui.init({
+				beforeback: function(){
+					if (isAddMember) {
+						var groupInfoView = plus.webview.getWebviewById("groupInfo.html");
+						mui.fire(groupInfoView, 'refreshPage', {});
+					}
+			        return true;
+			   }
+			});
+			mui.plusReady(function() {
+				currentView = plus.webview.currentWebview();
+			});
+			
+			document.getElementById("searchBtn").onclick = function() {
+				mui.ajax({
+					url : contextPath + "/user/findUser.do",
+					type : "post",
+					data : {username : searchInput.value},
+					success : function(r) {
+						if (r.isOk == "Y") {
+							user = r.data.user;
+							if (user != null) {
+								user.image = contextPath + user.image;
+							}
+							document.getElementById('mainContent').innerHTML = template('user-template', {
+								"user": user
+							});
+						} else {
+							alert(r.msg);
+						}
+					}
+				})
+			}
+			
+			document.getElementById("addGroupMember").onclick = function() {
+				var checkBox = document.getElementById("checkbox");
+				if (checkBox && checkBox.checked) {
+					if (user.username == currentUser.username) {
+						mui.toast("不能邀请自己入群！");
+						return;
+					}
+					
+					var groupId = currentView.groupId;
+					mui.ajax({
+						url : contextPath + "/group/inviteGroupMember.do",
+						type : "post",
+						data : {
+							username : checkBox.value,
+							groupId : groupId
+						},
+						success : function(r) {
+							if (r.isOk == "Y") {
+								mui.toast("邀请成功！");
+								isAddMember = true;
+							} else {
+								alert(r.msg);
+							}
+						}
+					})
+				} else {
+					mui.toast("请选择用户！");
+				}
+			}
+		</script>
+	</body>
+
+</html>

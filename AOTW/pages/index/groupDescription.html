@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../../css/index/groupDescription.css"/>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+		    <a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+		    <h1 class="mui-title">群描述</h1>
+		</header>
+		
+		<div class="mui-content">
+			<div id="mainContent"></div>
+			<script id='groupDescription-template' type="text/html">
+			    <ul class="mui-table-view">
+			        <li class="mui-table-view-cell mui-media">
+			            <a href="javascript:;">
+			                <img class="mui-media-object mui-pull-left" src="<%=(groupOwner.image)%>" />
+			                <div class="mui-media-body">
+			                    <%=(groupOwner.username)%>
+			                    <p class="mui-ellipsis">群主</p>
+			                </div>
+			            </a>
+			        </li>
+			    </ul>
+			    
+			    <div id="group-description">
+					<%=(description)%>
+				</div>
+			</script>
+		</div>
+		
+		<script src="../../js/mui.min.js"></script>
+		<script src="../../js/arttmpl.js"></script>
+		<script type="text/javascript" src="../../js/serverUrl.js" ></script>
+		<script type="text/javascript">
+			mui.init()
+			mui.plusReady(function() {
+				var currentView = plus.webview.currentWebview();
+				var groupOwner = currentView.groupOwner;
+				groupOwner.image = contextPath + groupOwner.image;
+				document.getElementById('mainContent').innerHTML = template('groupDescription-template', {
+					"description": currentView.description,
+					"groupOwner" : groupOwner
+				});
+			})
+		</script>
+	</body>
+
+</html>

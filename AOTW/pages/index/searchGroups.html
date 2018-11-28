@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../../css/index/searchGroups.css"/>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+		    <a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+		    <h1 class="mui-title">搜索群组</h1>
+		</header>
+		
+		<div class="mui-content">
+		    <div class="mui-input-row mui-search">
+				<input type="search" id="searchInput" class="mui-input-clear" placeholder="请输入群名称" />
+			</div>
+			
+			<div id="mainContent"></div>
+		 	<script id="group-template" type="text/html">
+		 		<% if(groupList && groupList.length > 0) { %>
+		 			<ul class="mui-table-view">
+		 				<% for(var i in groupList){ var group=groupList[i]; %>
+					    	<li class="mui-table-view-cell mui-media" onclick="openWindow('<%=(group.id)%>')">
+					    		<a href="javascript:;">
+					    			<img class="mui-media-object mui-pull-left" src="<%=(contextPath+group.image)%>">
+								    <div class="mui-media-body" style="line-height: 40px;">
+									    <%=(group.name)%>
+									</div>
+								</a>
+							</li>
+						<% } %>
+					</ul>
+				<% } else { %>
+					<div style="text-align: center;">没有找到匹配的群聊！</div>
+				<% } %>
+			</script>
+		</div>
+		
+		<script src="../../js/mui.min.js"></script>
+		<script src="../../js/arttmpl.js"></script>
+		<script type="text/javascript" src="../../js/serverUrl.js" ></script>
+		<script type="text/javascript">
+			mui.init();
+			
+			mui.ready(function(){
+				//通过输入框清空按钮清空输入时清空所有显示的群内容（注意这里用click没有效果，需要用tap）
+				document.querySelector(".mui-icon.mui-icon-clear").addEventListener("tap", function(){
+					document.getElementById('mainContent').innerHTML = template('group-template', {});
+				})
+			})
+			
+			document.getElementById("searchInput").oninput = function() {
+				var name = this.value;
+				if (name.trim() == "") {
+					document.getElementById('mainContent').innerHTML = template('group-template', {});
+					return;
+				}
+				mui.ajax({
+					url : contextPath + "/group/fuzzySearchGroupsByName.do?name=" + name,
+					success : function(r) {
+						if (r.isOk == "Y") {
+							document.getElementById('mainContent').innerHTML = template('group-template', {
+								"groupList": r.data.groupList,
+								"contextPath" : contextPath
+							});
+						} else {
+							alert(r.msg);
+						}
+					}
+				})
+			}
+			
+			function openWindow(groupId) {
+				mui.openWindow({
+					url : "joinGroup.html",
+					id : "joinGroup.html",
+					extras : {
+						"groupId" : groupId
+					}
+				})
+			}
+		</script>
+	</body>
+
+</html>

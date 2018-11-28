@@ -1,0 +1,512 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../../css/icons-extra.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/muiExtends.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/index/common.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/index/index.css" />
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav header">
+			<h1 class="mui-title">天下纵横</h1>
+			<a href="#topPopover">+</a>
+		</header>
+		
+		<div class="mui-content" style="position: relative;">
+			<div id="searchBtn" class="mui-input-row mui-search">
+				<span class="mui-icon mui-icon-search"></span>
+				<span>搜索</span>
+			</div>
+			
+			<div id="mapContainer"></div>
+			
+			<div id="goBackMyPosition">ME</div>
+、		</div>
+		<nav class="mui-bar mui-bar-tab" id="nav">
+			<a class="mui-tab-item" id="groupChats">
+				<div style="width:50%;float: right;">
+		    		<span id="messageTip" class="mui-badge mui-badge mui-badge-danger" style="opacity: 0;">1</span>
+		    	</div>
+		    	<div style=" float: right;text-align: right;margin-right: -25%;">
+					<span class="mui-icon mui-icon-chatbubble"></span>
+					<span class="mui-tab-label">群聊</span>
+				</div>
+			</a>
+			<a class="mui-tab-item" id="groups">
+				<span class="mui-icon-extra mui-icon-extra-peoples"></span>
+				<span class="mui-tab-label">群组</span>
+			</a>
+			<a class="mui-tab-item  mui-active" id="sharedLocation" href="#bottomPopover">
+				<span class="mui-icon mui-icon-map"></span>
+				<span class="mui-tab-label">共享位置</span>
+			</a>
+			<a class="mui-tab-item" id="chatBubble">
+				<span class="mui-icon mui-icon-gear"></span>
+				<span class="mui-tab-label">我的设定</span>
+			</a>
+		</nav>
+
+		<div id="goBackMyPosition" onclick="gobackMyPosition()">ME</div>
+		
+		<div id="bottomPopover" class="mui-popover">
+			<div class="mui-popover-arrow"></div>
+			<div class="mui-scroll-wrapper">
+				<div class="mui-scroll">
+					<ul class="mui-table-view" id="groupListUl">
+
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<div id="topPopover" class="mui-popover">
+			<div class="mui-popover-arrow"></div>
+			<ul class="mui-table-view" id="topMenu">
+				<li class="mui-table-view-cell">创建群</li>
+				<li class="mui-table-view-cell">加入群</li>
+				<li class="mui-table-view-cell">扫一扫</li>
+			</ul>
+		</div>
+		
+		<script src="../../js/mui.min.js"></script>
+		<script type="text/javascript" src="../../js/muiExtends.js"></script>
+		<script type="text/javascript" src="http://webapi.amap.com/maps?v=1.3&key=e8496e8ac4b0f01100b98da5bde96597"></script>
+		<script type="text/javascript" src="../../js/serverUrl.js" ></script>
+		<script type="text/javascript">
+			var currentPosition;
+			var map;
+			var currentUser = JSON.parse(localStorage.getItem('user'));
+			var clickNum = 0;
+			var messageTip = document.getElementById('messageTip');	//底部消息提示
+			
+			mui.init({
+				beforeback: function(){
+					clickNum ++;
+					if (clickNum > 1) {
+						plus.runtime.quit();
+					} else {
+						plus.nativeUI.toast('再按一次退出应用');
+						setTimeout(function(){
+							clickNum = 0;
+						},3000);
+					}
+					return false;
+				},
+				gestureConfig:{
+					doubletap:true
+				},
+				preloadPages: [ //缓存其他页面
+					{
+						url: 'groupChats.html',
+						id: 'groupChats.html',
+						styles: {
+							top: '0px',
+							bottom: '50px'
+						}
+					},
+					{
+						url: 'groups.html',
+						id: 'groups.html',
+						styles: {
+							top: '0px',
+							bottom: '50px'
+						}
+					},
+					{
+						url: 'chatBubble.html',
+						id: 'chatBubble.html',
+						styles: {
+							top: '0px',
+							bottom: '50px'
+						}
+					}
+				]
+			});
+			mui.plusReady(function() {
+//				mui.showLoading("正在定位..", "div"); //加载文字和类型，plus环境中类型为div时强制以div方式显示
+				plus.nativeUI.showWaiting("正在定位...", {loading:{icon:"../../images/waiting.png"}});
+				
+				var shareLocationTap = document.getElementById("sharedLocation");
+
+				mui("#nav").on("tap", "#groupChats", function() {
+					//打开群聊子页面
+					showSubpages(0);
+					shareLocationTap.href = "#";
+				});
+				mui("#nav").on("tap", "#groups", function() {
+					//打开群组界面
+					showSubpages(1);
+					shareLocationTap.href = "#";
+				});
+				mui("#nav").on("tap", "#chatBubble", function() {
+					//打开我的设定界面
+					showSubpages(2);
+					shareLocationTap.href = "#";
+				});
+				mui("#nav").on("tap", "#sharedLocation", function() {
+					//回到首页
+					showSubpages(-1);
+					shareLocationTap.href = "#bottomPopover";
+				})
+			});
+			getCurrentLocation(successCallback);
+			initBottomPopover();
+			initTopPopover();
+			//未标题添加双击刷新事件
+			addHeadDoubleClickListener();
+			addSearchBtnClickListener();
+			sendLocationTimer(1000*60*10);	//定时发送位置信息
+			
+			//发送位置计时器
+			function sendLocationTimer(intervalTime) {
+				setInterval(function() {
+					getCurrentLocation(sendCurrentLocation);
+				}, intervalTime);
+			}
+			
+			function sendCurrentLocation(data) {
+				currentPosition = data.position;
+				mui.ajax({
+					url: contextPath + "/user/updateLocation.do",
+					type: "post",
+					data: {
+						username: currentUser.username,
+						location: JSON.stringify(currentPosition)
+					},
+					success: function(r) {}
+				});
+			}
+			
+			function addHeadDoubleClickListener() {
+				document.querySelector('header').addEventListener('doubletap',function () {
+					location.reload();
+				});
+			}
+			
+			function addSearchBtnClickListener() {
+				document.getElementById('searchBtn').onclick = function() {
+					mui.openWindow({
+            			url : "searchGroups.html",
+            			id : "searchGroups.html"
+            		})
+				}
+			}
+
+			function getSubPages() {
+				var groupChats = plus.webview.getWebviewById("groupChats.html");
+				var groups = plus.webview.getWebviewById("groups.html");
+				var chatBubble = plus.webview.getWebviewById("chatBubble.html");
+				var subPages = [groupChats, groups, chatBubble];
+				return subPages;
+			}
+
+			function showSubpages(pageIndex) {
+				var subPages = getSubPages();
+				for (var i=0; i<subPages.length; i++) {
+					if (i==pageIndex) {
+						subPages[i].show();
+					} else {
+						subPages[i].hide();
+					}
+				}
+			}
+		
+			function initBottomPopover() {
+				var groupListUl = document.getElementById("groupListUl");
+				mui.ajax({
+					url: contextPath + "/user/getAllGroups.do",
+					success: function(r) {
+						if(r.isOk == "Y") {
+							var groupList = r.data.groupList;
+							if(groupList == null || groupList.length == 0) {
+								groupListUl.innerHTML = "你还没有加入群聊！";
+								return;
+							}
+							var li = "";
+							for(var i = 0; i < groupList.length; i++) {
+								li += '<li class="mui-table-view-cell" groupId="' + groupList[i].id + '">' + groupList[i].name + '</li>'
+							}
+							groupListUl.innerHTML = li;
+
+							bindGroupListLiClick(groupListUl);
+						} else {
+							alert(r.msg);
+						}
+					}
+				});
+			}
+
+			
+			//地图回到当前用户的所在位置
+			function gobackMyPosition() {
+				map.panTo(currentPosition);
+			}
+
+			function bindGroupListLiClick(groupListUl) {
+				var lis = groupListUl.getElementsByTagName("li");
+				for(var i = 0; i < lis.length; i++) {
+					lis[i].onclick = function() {
+						var groupId = this.getAttribute("groupId");
+						mui.ajax({
+							url: contextPath + "/group/getAllGroupMember.do?groupId=" + groupId,
+							success: function(r) {
+								map.destroy();
+								initMap(currentPosition);
+								markerPosition(map, currentPosition, currentUser);
+								if(r.data.userList) {
+									var userList = r.data.userList;
+									for(var i = 0; i < userList.length; i++) {
+										var position = JSON.parse(userList[i].location);
+										markerPosition(map, position, userList[i]);
+									}
+								}
+								map.setFitView();
+							}
+						})
+					}
+				}
+			}
+
+			function getCurrentLocation(successCallback) {
+				//用户位置定位   使用geolocation定位
+				AMap.plugin('AMap.Geolocation', function() {
+					var geolocation = new AMap.Geolocation({
+						enableHighAccuracy: true, //是否使用高精度定位，默认:true
+						timeout: 10000, //超过10秒后停止定位，默认：5s
+						buttonPosition: 'RB', //定位按钮的停靠位置
+						buttonOffset: new AMap.Pixel(10, 20), //定位按钮与设置的停靠位置的偏移量，默认：Pixel(10, 20)
+						zoomToAccuracy: true, //定位成功后是否自动调整地图视野到定位点
+					});
+					geolocation.getCurrentPosition(function(status, result) {
+						if(status == 'complete') {
+							onComplete(result)
+						} else {
+							onError(result)
+						}
+					});
+				});
+				//解析定位结果
+				function onComplete(data) {
+//					mui.hideLoading(); //隐藏后的回调函数
+					successCallback(data);
+				}
+				//解析定位错误信息
+				function onError(data) {
+					var str = '定位失败,';
+					str += '错误信息：';
+					switch(data.info) {
+						case 'PERMISSION_DENIED':
+							str += '浏览器阻止了定位操作';
+							break;
+						case 'POSITION_UNAVAILBLE':
+							str += '无法获得当前位置';
+							break;
+						case 'TIMEOUT':
+							str += '定位超时';
+							break;
+						default:
+							str += '未知错误';
+							break;
+					}
+					alert(str)
+				}
+			}
+
+			//定位成功的执行的行数
+			function successCallback(data) {
+				plus.nativeUI.closeWaiting();
+
+				initMap(data.position);
+				sendCurrentLocation(data);
+				markerPosition(map, data.position, currentUser);
+			}
+
+			function initMap(position) {
+				map = new AMap.Map('mapContainer', {
+					resizeEnable: true,
+					center: [position.lng, position.lat],
+					zoom: 13
+				});
+			}
+
+			function markerPosition(map, position, user) {
+				var content = [];
+				var src = contextPath + user.image;
+				content.push('<img src="' + src + '" />');
+				var marker = new AMap.Marker({
+					position: [position.lng, position.lat], //位置
+					content: createInfoWindow(content, user)
+				})
+				map.add(marker); //添加到地图
+				
+				AMap.event.addListener(marker, 'click', function() {
+	                mui.openWindow({
+						url: "userInfo.html",
+						id: "userInfo.html",
+						extras: {
+							userInfo: user,
+							currentUser: currentUser
+						}
+					})
+	            }); 
+			}
+
+			//构建自定义信息窗体
+			function createInfoWindow(content, user) {
+				var info = document.createElement("div");
+				
+				// 定义中部内容
+				var middle = document.createElement("div");
+				if(currentUser.username == user.username) {
+					middle.className = "middle-red";
+				} else {
+					middle.className = "middle";
+				}
+				middle.innerHTML = content;
+				info.appendChild(middle);
+
+				// 定义向下指向箭头
+				var sharp = document.createElement("span");
+				if(currentUser.username == user.username) {
+					sharp.className = "sharp-red";
+				} else {
+					sharp.className = "sharp";
+				}
+				info.appendChild(sharp);
+
+				return info;
+			}
+			
+			//绑定右滑事件
+			window.addEventListener("swiperight", function(e) {
+                //默认滑动角度在-45度到45度之间，都会触发右滑菜单，为避免误操作，可自定义限制滑动角度；
+                if (Math.abs(e.detail.angle) < 30) {
+                	//选中我的设定
+					selectTab(1);
+                	
+                	plus.webview.getWebviewById("groups.html").show('slide-in-left');
+					
+					updateIndexTabHref("#");
+                }
+           	});
+            
+            //绑定左滑事件
+           	window.addEventListener("swipeleft", function(e) {
+                //默认滑动角度在-45度到45度之间，都会触发右滑菜单，为避免误操作，可自定义限制滑动角度；
+                if (Math.abs(e.detail.angle) > 170) {
+                	//选中我的设定
+					selectTab(3);
+                	
+					plus.webview.getWebviewById("chatBubble.html").show('slide-in-right');
+					
+					updateIndexTabHref("#");					
+                }
+            });
+            
+            //更新首页的底部标签的href属性
+            function updateIndexTabHref(href) {
+            	document.getElementById("sharedLocation").href = href;
+            }
+            
+            window.addEventListener('updateIndexTabHref', function(event) {
+            	updateIndexTabHref(event.detail.href);
+            });
+            
+            //更新底部选中标签
+            function selectTab(tabIndex) {
+            	var tabs = document.getElementById('nav').getElementsByTagName('a');
+            	for (var i=0; i<tabs.length; i++) {
+            		if (i==tabIndex) {
+            			var oldClass = tabs[i].getAttribute('class');
+            			tabs[i].setAttribute("class", oldClass + " mui-active");
+            		} else {
+            			tabs[i].setAttribute("class", "mui-tab-item");
+            		}
+            	}
+            }
+            
+            window.addEventListener('selectTab', function(event) {
+            	selectTab(event.detail.tabIndex);
+            });
+            
+            function initTopPopover() {
+            	var menus = document.getElementById('topMenu').getElementsByTagName('li');
+            	var createGroupMenu = menus[0];
+            	var joinGroupMenu = menus[1];
+            	var scanMenu = menus[2];
+            	
+            	createGroupMenu.onclick = function() {
+            		mui.openWindow({
+            			url : 'createGroup.html',
+            			id : 'createGroup.html'
+            		})
+            		mui('#topPopover').popover('hide');
+            	}
+            	
+            	joinGroupMenu.onclick = function() {
+            		mui.openWindow({
+            			url : "searchGroups.html",
+            			id : "searchGroups.html"
+            		})
+            		mui('#topPopover').popover('hide');
+            	}
+            	
+            	scanMenu.onclick = function() {
+            		mui.openWindow({
+            			url : "barcodeScan.html",
+            			id : "barcodeScan.html"
+            		})
+            		mui('#topPopover').popover('hide');
+            	}
+            }
+            
+            //二维码扫描后的处理事件
+            window.addEventListener('handleAfterScaned', function(event) {
+            	handleAfterScaned(event.detail.result);
+            });
+            
+            //二维码扫描后的处理函数
+            function handleAfterScaned(result) {
+            	var isAppGenCode = result.indexOf(contextPath)>0 ? true : false;
+            	if (isAppGenCode) {
+            		var groupId = result.substring(result.lastIndexOf('=')+1, result.length-1);
+					mui.openWindow({
+						url : "joinGroup.html",
+						id : "joinGroup.html",
+						extras : {
+							groupId : groupId
+						}
+					})
+            	} else {
+            		mui.alert("当前应用暂时无法处理其他应用的二维码！");
+            	}
+            }
+            
+            window.addEventListener('refreshPage', function(event) {
+            	location.reload();
+            });
+            
+            //添加底部消息提示
+            window.addEventListener('addMessageTip', function(event) {
+            	var messageNum = event.detail.messageNum;
+            	if (messageNum && messageNum > 0) {
+            		messageTip.innerText = messageNum;
+            		messageTip.style.opacity = 1;
+            	} else {
+            		messageTip.style.opacity = 0;
+            		messageTip.innerText = 0;
+            	}
+            });
+            
+            //弹出框超出出现滚动条
+            mui('.mui-scroll-wrapper').scroll();
+		</script>
+	</body>
+
+</html>

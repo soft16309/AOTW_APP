@@ -1,0 +1,49 @@
+#user-img{
+	text-align: center;
+	margin: 2vh auto;
+	margin-bottom: 20px;
+}
+#user-img .mui-icon{
+	font-size: 110px;
+}
+#edit-info{
+	width: 90%;
+	margin: auto;	
+	background-color: #DDD;
+	border-radius: 60px;
+	padding-left: 30px;
+	text-align: center;
+}
+#edit-info table{
+	width: 90%;
+}
+#edit-info table th, #edit-info table td{
+	height: 50px;
+}
+#edit-info table th:first-child, #edit-info table td:first-child {
+	width: 100px;
+}
+
+#edit-info table input{
+	/*height: 30px;*/
+	width: 200px;
+	border-radius: 6px;
+	padding-left: 10px;
+}
+#edit-info .mui-btn{
+	width: 100px;
+	height: 40px;
+	margin: 20px auto;
+	text-align: center;
+	border: 1px  black;
+	border-radius: 6px;
+	font-size: 20px;
+}
+.mui-icon-checkmarkempty{
+	font-size: 30px;
+	color: #2AC845;
+}
+.mui-icon-closeempty{
+	font-size: 30px;
+	color: #CF2D28;
+}

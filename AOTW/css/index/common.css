@@ -1,0 +1,51 @@
+.header {
+	background-color: #007AFF;
+}
+.mui-bar-nav{
+	background-color: #007AFF;
+}
+.mui-action-back{
+	color: white;
+}
+
+.header-back{
+	color: #fff;
+	font-size: 20px;
+	margin-top: 12px;
+	
+}
+.mui-icon-more-filled{
+	float: right;
+	margin-top: -40px;
+	color: #fff;
+	
+}
+.header h1 {
+	color: #fff;
+	font-size: 20px;
+	font-weight: bold;
+}
+.header a {
+	margin-top: 10px;
+	font-size: 3em;
+	color: #fff;
+	float: right;
+}
+.mui-icon-extra {
+	margin-top: 4px;
+	padding-bottom: 0;
+	display: block;
+}
+.mui-icon-extra + .mui-tab-label{
+	font-size: 11px;
+}
+#searchBtn {
+	text-align: center;
+	padding: 4px;
+	background-color: #ddd;
+	color: #aaa;
+	margin-bottom: 2px;
+}
+#topPopover {
+	width: 120px;
+}

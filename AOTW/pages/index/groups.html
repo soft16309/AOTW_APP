@@ -1,0 +1,266 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../../css/icons-extra.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/index/common.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/index/groups.css" />
+		<style>
+			.mui-media-body {
+				position: relative;
+				top: 10px;
+			}
+			#searchBtn {
+				margin-bottom: 14px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav header">
+			<h1 class="mui-title">群组</h1>
+			<a href="#topPopover">+</a>
+		</header>
+
+		<div class="mui-content">
+			<div id="refreshContainer">
+				<div id="searchBtn" class="mui-input-row mui-search">
+					<span class="mui-icon mui-icon-search"></span>
+					<span>搜索</span>
+				</div>
+
+				<div>
+
+					<div class="menu-item">
+						<ul class="mui-table-view">
+							<li class="mui-table-view-cell">
+								<a class="mui-navigate-right" href="#" id="createGroup">创建群</a>
+							</li>
+						</ul>
+					</div>
+
+					<ul class="mui-table-view">
+						<li class="mui-table-view-cell mui-collapse">
+							<a class="mui-navigate-right" href="#" id="myCreateGroup">我管理的群</a>
+							<ul id="myCreateGroupItems" class="mui-table-view" style="margin-left: -50px;">
+
+							</ul>
+						</li>
+					</ul>
+
+					<ul class="mui-table-view">
+						<li class="mui-table-view-cell mui-collapse">
+							<a class="mui-navigate-right" href="#" id="myJoinGroup">我加入的群</a>
+							<ul id="myJoinGroupItems" class="mui-table-view" style="margin-left: -50px;">
+
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		
+		<div id="topPopover" class="mui-popover">
+			<div class="mui-popover-arrow"></div>
+			<ul class="mui-table-view" id="topMenu">
+				<li class="mui-table-view-cell">创建群</li>
+				<li class="mui-table-view-cell">加入群</li>
+				<li class="mui-table-view-cell">扫一扫</li>
+			</ul>
+		</div>
+		
+		<script src="../../js/mui.min.js"></script>
+		<script type="text/javascript" src="../../js/serverUrl.js" ></script>
+		<script type="text/javascript" src="../../js/commonHeader.js" ></script>
+		<script type="text/javascript">
+			var currentUser = JSON.parse(localStorage.getItem('user'));
+
+			mui.init({
+				pullRefresh: {
+					container: "#refreshContainer", //下拉刷新容器标识，querySelector能定位的css选择器均可，比如：id、.class等
+					down: {
+						style: 'circle', //必选，下拉刷新样式，目前支持原生5+ ‘circle’ 样式
+						height: '50px', //可选,默认50px.下拉刷新控件的高度,
+						range: '50px', //可选 默认100px,控件可下拉拖拽的范围
+						offset: '45px', //可选 默认0px,下拉刷新控件的起始位置
+						callback: function() {
+							location.reload();
+						}
+					}
+				}
+			})
+
+			initGroupList();
+
+			document.getElementById("createGroup").onclick = function() {
+				mui.openWindow({
+					url: "createGroup.html",
+					id: "createGroup"
+				})
+			}
+
+			function initGroupList() {
+				var myCreateGroupItems = document.getElementById("myCreateGroupItems");
+				var myJoinGroupItems = document.getElementById("myJoinGroupItems");
+				mui.ajax({
+					url: contextPath + "/user/getCreateGroups.do",
+					success: function(r) {
+						if(r.isOk == "Y") {
+							var groupList = r.data.groupList;
+							if(groupList == null || groupList.length == 0) {
+								return;
+							}
+							var item = "";
+							for(var i = 0; i < groupList.length; i++) {
+								var tmp = '<li class="mui-table-view-cell mui-media" groupId="' + groupList[i].id + '">' +
+											'<a href="javascript:;">' +
+												'<img class="mui-media-object mui-pull-left" src="' + contextPath + groupList[i].image + '">' +
+												'<div class="mui-media-body">' +
+													groupList[i].name +
+													'<p class="mui-ellipsis"></p>' +
+												'</div>' +
+											'</a>' +
+										'</li>';
+
+								item += tmp;
+							}
+							myCreateGroupItems.innerHTML = item;
+
+							bindGroupListItemClick(myCreateGroupItems);
+						} else {
+							alert(r.msg);
+						}
+					}
+				});
+
+				mui.ajax({
+					url: contextPath + "/user/getJoinGroups.do",
+					success: function(r) {
+						if(r.isOk == "Y") {
+							var groupList = r.data.groupList;
+							if(groupList == null || groupList.length == 0) {
+								return;
+							}
+							var item = "";
+							for(var i = 0; i < groupList.length; i++) {
+								var tmp = '<li class="mui-table-view-cell mui-media" groupId="' + groupList[i].id + '">' +
+											'<a href="javascript:;">' +
+												'<img class="mui-media-object mui-pull-left" src="' + contextPath + groupList[i].image + '">' +
+												'<div class="mui-media-body">' +
+													groupList[i].name +
+													'<p class="mui-ellipsis"></p>' +
+												'</div>' +
+											'</a>' +
+										'</li>';
+
+								item += tmp;
+							}
+							myJoinGroupItems.innerHTML = item;
+
+							bindGroupListItemClick(myJoinGroupItems);
+						} else {
+							alert(r.msg);
+						}
+					}
+				});
+			}
+
+			function getMessageFromLocal(filename) {
+				var localfilename = currentUser.username + "_file_" + filename;
+				var localFile = localStorage.getItem(localfilename);
+				if(!localFile) {
+					localFile = [];
+					return localFile;
+				}
+				return JSON.parse(localFile);
+			}
+
+			function bindGroupListItemClick(parentObj) {
+				var items = parentObj.getElementsByTagName("li");
+				for(var i = 0; i < items.length; i++) {
+					items[i].onclick = function() {
+						var id = this.getAttribute('groupId');
+						var to_group = null;
+
+						var localFile = getMessageFromLocal("group" + id);
+
+						if(localFile.length < 1 || !localFile[0].to_group) {
+							mui.ajax({
+								url: contextPath + "/group/getGroupById.do",
+								async: false,
+								data: {
+									groupId: id
+								},
+								success: function(r) {
+									if(r.isOk == "Y") {
+										to_group = r.data.group;
+									}
+								}
+							});
+						} else {
+							to_group = localFile[0].to_group;
+						}
+						
+						if (to_group.status == 0) {
+							mui.alert("该群已被禁用，无法进行相关操作！");
+							return;
+						}
+
+						mui.openWindow({
+							url: "chat.html",
+							id: "chat.html",
+							extras: {
+								localFile: localFile,
+								chatObj: to_group.name,
+								chatId: id,
+								chatAttribute: 'groupId', //聊天对象保存的属性
+								to_user: null,
+								to_group: to_group
+							}
+						})
+					}
+				}
+			}
+
+			//绑定右滑事件
+			window.addEventListener("swiperight", function(e) {
+				//默认滑动角度在-45度到45度之间，都会触发右滑菜单，为避免误操作，可自定义限制滑动角度；
+				if(Math.abs(e.detail.angle) < 30) {
+					plus.webview.getWebviewById('groupChats.html').show('slide-in-left');
+					plus.webview.currentWebview().hide('slide-out-right');
+					var index = plus.webview.getWebviewById('index.html');
+					mui.fire(index, 'selectTab', {
+						tabIndex: 0
+					});
+					mui.fire(index, 'updateIndexTabHref', {
+						href: "#"
+					});
+				}
+			});
+
+			//绑定左滑事件
+			window.addEventListener("swipeleft", function(e) {
+				//默认滑动角度在-45度到45度之间，都会触发右滑菜单，为避免误操作，可自定义限制滑动角度；
+				if(Math.abs(e.detail.angle) > 170) {
+					var index = plus.webview.getWebviewById('index.html');
+					plus.webview.currentWebview().hide('slide-out-left');
+					mui.fire(index, 'selectTab', {
+						tabIndex: 2
+					});
+					mui.fire(index, 'updateIndexTabHref', {
+						href: "#bottomPopover"
+					});
+				}
+			});
+
+			window.addEventListener('refreshPage', function(event) {
+				location.reload();
+			});
+		</script>
+	</body>
+
+</html>

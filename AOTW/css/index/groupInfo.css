@@ -1,0 +1,74 @@
+.header {
+	background-color: #007AFF;
+}
+.mui-action-back {
+	color: #fff;
+}
+.header h1 {
+	text-align: left;
+	color: #fff;
+}
+#groupMember {
+	background-color: #fff;
+	padding: 20px 0;
+	width: 100%;
+	margin: 0;
+}
+
+#groupMember table td{
+	text-align: center;
+	width: 20%;
+}
+#groupMember table td img {
+	width: 14vw;
+	height: 14vw;
+}
+#groupMember table td p{
+	width: 13vw;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	margin: 0 auto;
+}
+.mui-table-view {
+	margin : 20px auto;
+}
+
+.content {
+	float: right;
+}
+.groupDescription {
+	width: 92%;
+	color: #666;
+	font-size: 0.9em;
+	letter-spacing: 0.5px;
+	margin: 0 auto;
+	margin-top: 4px;
+	
+	/*使用webkit css扩展属性，实现多行文本溢出显示省略号，适用于WebKit浏览器及移动端*/
+	display: -webkit-box;		   /*将对象作为弹性伸缩盒子模型显示*/
+	-webkit-box-orient: vertical;  /*设置或检索伸缩盒对象的子元素的排列方式*/
+	-webkit-line-clamp: 3;
+	overflow: hidden;
+}
+
+.icon .mui-icon {
+	font-size: 40px;
+	border: 1px solid #666;
+	width: 14vw;
+	height: 14vw;
+	line-height: 14vw;
+	color: #666;
+}
+.icon {
+	vertical-align: top;
+}
+#groupDescriptionPopover {
+	width: 80%;
+	height: 16vh;
+	padding: 10px;
+}
+#group-description {
+	width: 90%;
+	padding: 10px;
+}

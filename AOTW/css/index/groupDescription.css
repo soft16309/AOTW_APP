@@ -1,0 +1,25 @@
+.mui-bar-nav {
+	background-color: #007AFF;
+}
+.mui-bar-nav a {
+	color: #fff;
+}
+.mui-bar-nav h1 {
+	text-align: left;
+	color: #fff;
+}
+body {
+	background-color: #fff;
+}
+.mui-content>.mui-table-view:first-child {
+	margin-top: 0;
+}
+#group-description {
+	background-color: #fff;
+	font-size: 1.4em;
+	font-weight: bold;
+	padding: 20px 12px;
+	word-wrap : break-word;
+	letter-spacing: 2px;
+	line-height: 26px;
+}

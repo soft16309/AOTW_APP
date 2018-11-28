@@ -1,0 +1,12 @@
+.header {
+	background-color: transparent;
+	-webkit-box-shadow: none;
+	box-shadow:none;
+}
+.header h1 {
+	color: #fff;
+	text-align: left;
+}
+.header .mui-icon {
+	color: #fff;
+}

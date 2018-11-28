@@ -1,0 +1,20 @@
+.header {
+	background-color: #007AFF;
+	color: #fff;
+}
+.header h1 {
+	color : #fff;
+	font-size: 20px;
+	font-weight: normal;
+	text-align: left;
+	margin-top: 12px;
+}
+.header a {
+	color: #fff;
+}
+.mui-switch.mui-active:before{
+	content: '启用';
+}
+.mui-switch:before{
+	content: '禁用';
+}

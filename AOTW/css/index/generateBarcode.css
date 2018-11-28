@@ -1,0 +1,32 @@
+.header {
+	background-color: #007AFF;
+}
+.header a {
+	color: #fff;
+}
+.header h1 {
+	text-align: left;
+	color: #fff;
+}
+body, .mui-content, #container{
+	background-color: #CCC;
+	padding: 0;
+}
+#mainContent {
+	width: 86%;
+  	background-color: #fff;
+   	margin: auto;
+}
+.mui-table-view, .mui-media {
+	border: 0;
+}
+.mui-table-view:before, .mui-table-view:after {
+	height: 0;
+}
+#qrcode {
+	margin: 10vh auto;
+	text-align: center;
+}
+#qrcode img {
+	margin: 0 auto;
+}

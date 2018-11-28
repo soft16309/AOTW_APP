@@ -1,0 +1,11 @@
+#menu {
+	margin-top: 60px;
+}
+#menu button {
+	font-size: 1.1em;
+	width: 120px;
+	height: 42px;
+}
+#regForm table tr td:first-child {
+	vertical-align: top;
+}

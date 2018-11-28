@@ -1,0 +1,191 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../../css/icons-extra.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/index/common.css"/>
+		<link rel="stylesheet" href="../../css/index/edit.css" />
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+		    <a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left" ></a>
+		    <h1 class="header-back">我的设定</h1>
+		</header>
+		
+		<div class="mui-content">
+			<div id="mainContent"></div>
+			
+			<script id='userInfo-template' type="text/html">
+			    <div id="user-img">
+			    	<img src="<%=(headImage)%>" style="width: 80px; height: 80px;" />
+			    	<p><%=(currentUser.username)%></p>
+			    </div>
+			    <div id="edit-info">
+			    	<table>
+			    		<tr>
+			    			<th><span class="mui-icon mui-icon-compose" style="font-size: 40px;"></span></th>
+			    			<th style="text-align: center;">编辑个人信息</th>
+			    		</tr>
+			    		<tr>
+			    			<th>昵称</th>
+			    			<td><input name="nickname" value="<%=(currentUser.nickname)%>" /></th>
+			    		</tr>
+			    		<tr>
+			    			<th>真实姓名</th>
+			    			<td><input name="realname" value="<%=(currentUser.realname)%>" /></th>
+			    		</tr>
+			    		<tr>
+			    			<th>手机号码</th>
+			    			<td><input name="phone" value="<%=(currentUser.phone)%>" /></th>
+			    		</tr>
+			    		<tr>
+			    			<th>电子邮箱</th>
+			    			<td><input name="email" value="<%=(currentUser.email)%>" /></th>
+			    		</tr>
+			    		<tr>
+			    			<th>联系地址</th>
+			    			<td><input name="address" value="<%=(currentUser.address)%>" /></th>
+			    		</tr>
+			    	</table>
+			    	<button type="button" class="mui-btn" id="saveInfo">确定</button>
+			    </div>
+		    </script>
+		</div>
+		
+		<script src="../../js/mui.min.js"></script>
+		<script src="../../js/arttmpl.js"></script>
+		<script type="text/javascript" src="../../js/serverUrl.js" ></script>
+		<script type="text/javascript">
+			mui.init()
+			mui.plusReady(function() {
+				var currentUser = JSON.parse(localStorage.getItem('user'));
+				
+				//写入模板
+				document.getElementById('mainContent').innerHTML = template('userInfo-template', {
+					"currentUser" : currentUser,
+					"headImage" : contextPath + currentUser.image
+				});
+				
+				var headImage = document.getElementById('user-img').getElementsByTagName("img")[0];
+				headImage.addEventListener('tap', function(event) {
+					var btnArray = [{
+						title: "拍照"
+					}, {
+						title: "从相册选择"
+					}];
+					plus.nativeUI.actionSheet({
+						title: "选择照片",
+						cancel: "取消",
+						buttons: btnArray
+					}, function(e) {
+						var index = e.index;
+						switch (index) {
+							case 0:
+								break;
+							case 1:
+								var cmr = plus.camera.getCamera();
+								cmr.captureImage(function(path) {
+									headImage.src = "file://" + plus.io.convertLocalFileSystemURL(path);
+								}, function(err) {});
+								break;
+							case 2:
+								plus.gallery.pick(function(path) {
+									headImage.src = path;
+								}, function(err) {}, null);
+								break;
+						}
+					});
+				}, false);
+				
+				bindInputBlurListener();
+				
+				//绑定确定修改的按钮事件
+				document.getElementById('saveInfo').onclick = function() {
+					var oldImage = contextPath + currentUser.image;
+					if (oldImage != headImage.src) {
+						saveInfoWithImage();
+					} else {
+						saveInfo();
+					}
+				}
+				
+				function bindInputBlurListener() {
+					var inputs = document.getElementById('edit-info').getElementsByTagName('input');
+					for (var i=0; i<inputs.length; i++) {
+						inputs[i].onblur = function() {
+							if (this.name == "phone") {
+								if (this.value.trim() == "") {
+									mui.toast('手机号码不能为空！');
+								} else if (!(/^1[34578]\d{9}$/.test(this.value))) {
+									mui.toast('请填写有效的手机号码！');
+								} else {
+									currentUser[this.name] = this.value;
+								}
+							} else if (this.name == "email") {
+								if (this.value.trim() == "") {
+									mui.toast('邮箱不能为空！');
+								}  else if (!(/^[A-Za-z\d]+([-_.][A-Za-z\d]+)*@([A-Za-z\d]+[-.])+[A-Za-z\d]{2,4}$/.test(this.value))) {
+									mui.toast('请填写有效的邮箱地址！');
+								} else {
+									currentUser[this.name] = this.value;
+								}
+							} else {
+								currentUser[this.name] = this.value;
+							}						
+						}
+					}
+				}
+				
+				//保存个人信息（带头像）
+				function saveInfoWithImage() {
+	                var task = plus.uploader.createUpload(contextPath +"/upload/upload.do", 
+	                    { method:"POST",blocksize:204800,priority:100 },
+	                    function (t,status) {
+	                        // 上传完成
+	                        console.log(JSON.stringify(t));
+	                        if (status == 200) { 
+	                        	var r = JSON.parse(t.responseText);
+	                            currentUser.image = r.data.path;
+	                            headImage.src = contextPath + r.data.path;
+	                            saveInfo();
+	                        } else {
+	                            alert("上传头像失败: " + status);
+	                        }
+	                    }
+	                );
+	                task.addFile(headImage.src, {key:"file"} );
+	                task.start();
+	            }
+				
+				function saveInfo() {
+					mui.ajax({
+						url : contextPath + "/user/updatePersonInfoNoImage.do",
+						type: "post",
+						data : {
+							username : currentUser.username,
+							nickname : currentUser.nickname,
+							realname : currentUser.realname,
+							phone : currentUser.phone,
+							email : currentUser.email,
+							address : currentUser.address,
+							image : currentUser.image
+						},
+						success : function(r) {
+							if (r.isOk == "Y") {
+								mui.toast('修改成功！');
+								localStorage.setItem('user', JSON.stringify(currentUser));
+							}
+						}
+					})
+				}
+				
+			})
+		</script>
+	</body>
+
+</html>

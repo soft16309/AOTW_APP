@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../../css/icons-extra.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/index/common.css"/>
+		<link rel="stylesheet" href="../../css/index/chatBubble.css" />
+		<style>
+			header a.mui-icon-bars {
+				margin: 0;
+				display: none;
+			}
+			#topPopover {
+				width: 150px
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav header">
+		    <h1 class="mui-title">我的设定</h1>
+		    <a href="#topPopover" class="mui-icon mui-icon-bars"></a>
+		</header>
+		
+		<div class="mui-content">
+			<div id="user-img">
+		    	<span class="mui-icon mui-icon-contact mui-icon-icon-contact-filled"></span>
+		    	<h1>用户设置</h1>
+		    </div>
+		    <div id="menu" class="user-btn">
+		    	<button type="button" class="mui-btn"><span class="mui-icon mui-icon-compose"></span>编辑个人信息</button>
+		    	<button type="button" class="mui-btn"><span class="mui-icon mui-icon-locked"></span>修改用户密码</button>
+		    	<button type="button" class="mui-btn"><span class="mui-icon mui-icon-eye"></span>退出登录</button>
+		    </div>
+		</div>
+		
+		<div id="topPopover" class="mui-popover">
+			<div class="mui-popover-arrow"></div>
+			<ul class="mui-table-view" id="topMenu">
+				<li class="mui-table-view-cell">管理注册用户</li>
+				<li class="mui-table-view-cell">管理群</li>
+			</ul>
+		</div>
+		
+		<script src="../../js/mui.min.js"></script>
+		<script type="text/javascript" src="../../js/serverUrl.js" ></script>
+		<script type="text/javascript">
+			var currentUser = JSON.parse(localStorage.getItem('user'));
+			
+			mui.init()
+			checkUser();
+			
+			var menus = document.getElementById("menu").getElementsByTagName("button");
+			var editBtn = menus[0];
+			var updateBtn = menus[1];
+			var logoutBtn = menus[2];
+			editBtn.onclick = function() {
+				mui.openWindow({
+					url : 'edit.html',
+					id : 'edit.html'
+				});
+			}
+			updateBtn.onclick = function() {
+				mui.openWindow({
+					url : 'modifyPassword.html',
+					id : 'modifyPassword.html'
+				});
+			}
+			logoutBtn.onclick = function() {
+				mui.ajax({
+					url : contextPath + "/user/logout.do",
+					success: function(r) {
+						if (r.isOk == "Y") {
+							localStorage.removeItem("user");
+							mui.openWindow({
+								url : "../userManage/login.html",
+								id : "login.html"
+							})
+						}
+					}
+				})
+				
+			}
+			
+			//绑定右滑事件
+			window.addEventListener("swiperight", function(e) {
+                //默认滑动角度在-45度到45度之间，都会触发右滑菜单，为避免误操作，可自定义限制滑动角度；
+                if (Math.abs(e.detail.angle) < 30) {
+					plus.webview.currentWebview().hide('slide-out-right');
+					var index = plus.webview.getWebviewById('index.html');
+					mui.fire(index, 'selectTab', {
+						tabIndex : 2
+					});
+					mui.fire(index, 'updateIndexTabHref', {
+						href : "#bottomPopover"
+					});
+                }
+            });
+            
+            //检查用户是否为管理员
+            function checkUser() {
+            	if (!currentUser.isadmin || currentUser.isadmin != 1) {
+            		//不是管理员
+            		return;
+            	}
+            
+            	document.querySelector(".mui-icon.mui-icon-bars").style.display = "block";
+            	var menu = document.getElementById('topMenu').getElementsByTagName('li');
+            	var usersManage = menu[0];
+            	var groupsManage = menu[1];
+            	usersManage.onclick = function() {
+            		mui.openWindow({
+            			url : "../admin/usersManage.html",
+            			id : "groupsManage.html"
+            		})
+            		mui('#topPopover').popover('hide');
+            	}
+            	
+            	groupsManage.onclick = function() {
+            		mui.openWindow({
+            			url : "../admin/groupsManage.html",
+            			id : "groupsManage.html"
+            		})
+            		mui('#topPopover').popover('hide');
+            	}
+            }
+		</script>
+	</body>
+
+</html>

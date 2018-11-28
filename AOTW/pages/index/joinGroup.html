@@ -1,0 +1,173 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../../css/index/common.css"/>
+		<link rel="stylesheet" href="../../css/index/groupMaintain.css" />
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+		    <a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left" ></a>
+		    <h1 class="header-back">群资料</h1>
+		</header>
+		
+		<div class="mui-content">
+			<div id="mainContent"></div>
+			<script id="groupInfo-template" type="text/html">
+				<ul class="mui-table-view">
+				    <li class="mui-table-view-cell mui-media">
+				        <a href="javascript:;">
+				            <img class="mui-media-object mui-pull-left" src="<%=(headImage)%>">
+				            <div class="mui-media-body" style="height: 40px;line-height: 40px;">
+				              	群头像
+				            </div>
+				        </a>
+				    </li>
+				</ul>
+				
+				<div class="group-info">
+			    	<a>群名称：<span class="info-content"><%=(groupInfo.name)%></span></a>
+			    </div>
+			    
+			    <div class="group-info">
+			    	<a>群规模：<span class="info-content"><%=(groupInfo.scale)%>人</span></a>
+			    </div>
+			    
+			    <div class="group-info">
+			    	<a>群分类：<span class="info-content"><%=(groupInfo.sort)%></span></a>
+			    </div>
+			    
+			    <div class="group-info">
+			    	<a>群地点：<span class="info-content"><%=(groupInfo.address)%></span></a>
+			    </div>
+			    
+			    <div>
+			    	<textarea id="group-description" disabled="disabled" placeholder="群描述：">群描述：<%=(groupInfo.description)%></textarea>
+			    </div>
+			</script>
+		</div>
+		
+		<div style="position: fixed;bottom: 0;left: 0;width: 100%;" id="button"></div>
+	   
+	   	<script id="button-template" type="text/html">
+	   		<% if(isGroupEnable) { %>
+		   		<% if(isGroupMember) { %>
+		   			<button type="button" class="mui-btn mui-btn-blue mui-btn-block" onclick="sendMessage()">发信息</button>
+		   		<% } else { %>
+		   			<button type="button" class="mui-btn mui-btn-red mui-btn-block" onclick="joinGroup()">加入群聊</button>
+		   		<% } %>
+		   	<% } else { %>
+		   		<button type="button" class="mui-btn mui-btn-red mui-btn-block">该群已被禁用</button>
+		   	<% } %>
+	   	</script>
+	    
+		<script src="../../js/mui.min.js"></script>
+		<script src="../../js/arttmpl.js"></script>
+		<script type="text/javascript" src="../../js/serverUrl.js" ></script>
+		<script type="text/javascript">
+			var currentUser = JSON.parse(localStorage.getItem('user'));
+			var currentView;
+			var groupInfo;
+			
+			mui.init()
+			mui.plusReady(function() {
+				currentView = plus.webview.currentWebview();
+				mui.ajax({
+					url : contextPath + "/group/getGroupById.do?groupId=" + currentView.groupId,
+					success : function(r) {
+						if (r.isOk == "Y") {
+							groupInfo = r.data.group;
+							document.getElementById('mainContent').innerHTML = template('groupInfo-template', {
+								"groupInfo": groupInfo,
+								"headImage" : contextPath + groupInfo.image
+							});
+						} else {
+							alert(r.msg);
+						}
+					}
+				})
+				
+				mui.ajax({
+					url : contextPath + "/group/getAllGroupMember.do?groupId=" + currentView.groupId,
+					success : function(r) {
+						if (r.isOk == "Y") {
+							var groupMembers = r.data.userList;
+							var isGroupMember = false;
+							if (!groupMembers) {
+								groupMembers = [];
+							}
+							groupMembers.push(r.data.groupOwner);
+							
+							for (var i=0; i<groupMembers.length; i++) {
+								if (currentUser.username == groupMembers[i].username) {
+									isGroupMember = true;
+									break;
+								}
+							}
+							
+							document.getElementById('button').innerHTML = template('button-template', {
+								"isGroupMember" : isGroupMember,
+								"isGroupEnable" : (groupInfo.status == 1)
+							});
+
+						}
+					}
+				})
+			});
+			
+			function getMessageFromLocal(filename) {
+				var localfilename = currentUser.username + "_file_" + filename;
+				var localFile = localStorage.getItem(localfilename);
+				if(!localFile) {
+					localFile = [];
+					return localFile;
+				}
+				return JSON.parse(localFile);
+			}
+			
+			function sendMessage() {
+				var localFile = getMessageFromLocal("group" + groupInfo.id);
+				mui.openWindow({
+					url: "chat.html",
+					id: "chat.html",
+					extras: {
+						localFile: localFile,
+						chatObj: groupInfo.name,
+						chatId: groupInfo.id,
+						chatAttribute: 'groupId', //聊天对象保存的属性
+						to_user: null,
+						to_group: groupInfo
+					}
+				})
+			}
+			
+			function joinGroup() {
+				var btnArray = ['取消', '<span style="color:#cf2d28;">确定</span>'];
+				mui.confirm('确定加入该群聊？', '提示', btnArray, function(e) {
+					if (e.index != 0) {
+						mui.ajax({
+							url : contextPath + "/group/joinGroup.do?groupId=" + currentView.groupId,
+							success : function(r) {
+								if (r.isOk == "Y") {
+									mui.toast("已成功加入群聊");
+									isGroupMember = true;
+									document.getElementById('button').innerHTML = template('button-template', {
+										"isGroupMember" : isGroupMember
+									});
+								} else {
+									alert(r.msg);
+								}
+							}
+						})
+					}
+				}, "div");
+			}
+		</script>
+	</body>
+
+</html>

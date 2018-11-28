@@ -1,0 +1,27 @@
+.header {
+	background-color: #007AFF;
+}
+.header h1{
+	color: #fff;
+}
+.header a.mui-icon {
+	color: #fff;
+	font-size: 0.9em;
+	margin-top: 4px;
+}
+#top div.mui-search {
+	width: 83%;
+	float: left;
+	/*margin-left: 4px;*/
+}
+#top {
+	margin: 4px;
+	text-align: right;
+}
+#searchBtn {
+	width: 16%;
+	background-color: #007AFF;
+	color: #fff;
+	border-radius: 8px;
+	font-weight: bold;
+}

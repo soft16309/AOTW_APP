@@ -1,0 +1,371 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../../css/index/groupInfo.css" />
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav header">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">群资料</h1>
+		</header>
+
+		<div class="mui-content">
+			<div id="groupMember">
+				<table style="width: 92%;margin: 0 auto;">
+
+				</table>
+			</div>
+	
+			<div id="mainContent"></div>
+			<script id='groupInfo-template' type="text/html">
+				<ul class="mui-table-view">
+			        <li class="mui-table-view-cell">
+			         	 群聊名称：<span class="content"><%=(groupInfo.name)%></span>
+			        </li>
+			        <li class="mui-table-view-cell" onclick="generateBarcode()">
+			            <a class="mui-navigate-right">
+			         	       群二维码：
+			            </a>
+			        </li>
+			        <% if(isGroupOwner) { %>
+			        <li class="mui-table-view-cell">
+			            <a class="mui-navigate-right" onclick="openGroupData()">
+			         	       群管理：
+			            </a>
+			        </li>
+			        <% } %>
+			    </ul>
+			    
+			    <ul class="mui-table-view">
+				    <li class="mui-table-view-cell">
+				       	群规模：<span class="content"><%=(groupInfo.scale)%>人</span>
+			        </li>
+			        <li class="mui-table-view-cell">
+			         	群分类：<span class="content"><%=(groupInfo.sort)%></span>
+			        </li>
+			        <li class="mui-table-view-cell">
+			         	 群地点：<span class="content"><%=(groupInfo.address)%></span>
+			        </li>
+			    </ul>
+			    
+			    <ul class="mui-table-view">
+				    <li class="mui-table-view-cell">
+				    	<a onclick="openGroupDescription()">
+				       	群描述：
+				       	<div class="groupDescription">
+				       		<span title="<%=(groupInfo.description)%>"><%=(groupInfo.description)%></span>
+				       	</div>
+				       	</a>
+			        </li>
+			    </ul>
+		    </script>
+		    
+		    <ul class="mui-table-view">
+			    <li class="mui-table-view-cell" id="clearChatRecords">
+			       	清空聊天记录
+		        </li>
+		    </ul>
+		    
+		    <div id="bottomDelButton"> </div>
+		    <script id='bottomDelButton-template' type="text/html">
+		    	<% if(isGroupOwner) { %>
+		    		<button type="button" class="mui-btn mui-btn-red mui-btn-block" onclick="dissolveGroup()">解散群聊</button>
+				<% } else { %>
+					<button type="button" class="mui-btn mui-btn-red mui-btn-block" onclick="quitGroup()">删除并退出</button>
+		   		<% } %>
+		    </script>
+		</div>
+
+		<script src="../../js/mui.min.js"></script>
+		<script src="../../js/arttmpl.js"></script>
+		<script type="text/javascript" src="../../js/serverUrl.js" ></script>
+		<script type="text/javascript">
+			var currentUser = JSON.parse(localStorage.getItem('user'));
+			var currentView;
+			var isClearRecords = false; 	//用于判断是否清空聊天记录
+			
+			var ROW_COUNT = 5;		//每行显示个数
+			
+			mui.init({
+				beforeback: function(){
+					if (isClearRecords) {
+						var groupsView = plus.webview.getWebviewById('groupChats.html');
+						mui.fire(groupsView, 'refreshPage', {});
+					}
+			        return true;
+			   }
+			})
+			mui.plusReady(function() {
+				currentView = plus.webview.currentWebview();
+				init();
+				
+				var groupMember = currentView.groupMember;
+				initGroupMemberTable(groupMember);
+				
+				//初始化群资料
+				document.getElementById('mainContent').innerHTML = template('groupInfo-template', {
+					"groupInfo": currentView.groupInfo,
+					"isGroupOwner": (groupMember[0].username == currentUser.username)
+				});
+
+				//初始化底部删除按钮
+				document.getElementById('bottomDelButton').innerHTML = template('bottomDelButton-template', {
+					"isGroupOwner": (groupMember[0].username == currentUser.username)
+				});
+				
+				function init() {
+					mui.ajax({
+						url : contextPath + "/group/getAllGroupMember.do?groupId=" + currentView.groupInfo.id,
+						async : false,
+						success : function(r) {
+							if (r.isOk == "Y") {
+								var groupMember = [];
+								groupMember.push(r.data.groupOwner);
+								if (r.data.userList) {
+									var userList = r.data.userList;
+									for (var i=0; i<userList.length; i++) {
+										groupMember.push(userList[i]);
+									}
+								}
+								currentView.groupMember = groupMember;
+							}
+						}
+					})
+				}
+
+				function initGroupMemberTable(groupMember) {
+					var table = document.getElementById("groupMember").getElementsByTagName("table")[0];
+					table.innerHTML = "";
+					for(var i = 0; i < groupMember.length; i++) {
+						var tr = document.createElement('tr');
+						for(; i < groupMember.length; i++) {
+							var user = groupMember[i];
+							var td = document.createElement("td");
+							td.setAttribute('groupMemberIndex', i);
+							td.innerHTML = '<img src="' + contextPath + user.image + '" />' +
+											'<p>' + user.username + '</p>';
+							td.onclick = function() {
+								var index = this.getAttribute("groupMemberIndex");
+								mui.openWindow({
+									url: "userInfo.html",
+									id: "userInfo.html",
+									extras: {
+										userInfo: groupMember[index],
+										currentUser: currentUser
+									}
+								})
+							}
+							tr.appendChild(td);
+
+							if((i + 1) % ROW_COUNT == 0) {
+								break;
+							}
+						}
+						table.appendChild(tr);
+					}
+					
+					addInviteIcon(table);
+					
+					var groupOwner = currentView.groupMember[0];
+					if (groupOwner.username == currentUser.username) {
+						//群主才可以移除成员
+						addDeteleIcon(table);
+					}
+					
+					//格式化表格，用于在数据个数少于ROW_COUNT时显示正常
+					formatTable(table);
+				}
+				
+				function formatTable(table) {
+					var tr = table.getElementsByTagName("tr")[0];
+					var tdCount = tr.getElementsByTagName("td").length;
+					for (var i=tdCount; i<ROW_COUNT; i++) {
+						tr.appendChild(document.createElement("td"));
+						table.appendChild(tr);
+					}
+				}
+				
+				//添加邀请的按钮
+				function addInviteIcon(table) {
+					var trs = table.getElementsByTagName("tr");
+					var tr = trs[trs.length-1];
+					var tdCount = tr.getElementsByTagName("td").length;
+					if (tdCount < ROW_COUNT) {
+						var td = document.createElement("td");
+						td.setAttribute("class", "icon");
+						td.innerHTML = '<span class="mui-icon mui-icon-plusempty" onclick="inviteGroupMember()"></span>';
+						tr.appendChild(td);
+					} else {
+						tr = document.createElement("tr");
+						var td = document.createElement("td");
+						td.setAttribute("class", "icon");
+						td.innerHTML = '<span class="mui-icon mui-icon-plusempty" onclick="inviteGroupMember()"></span>';
+						tr.appendChild(td);
+						table.appendChild(tr);
+					}
+				}
+				
+				//添加删除按钮
+				function addDeteleIcon(table) {
+					var trs = table.getElementsByTagName("tr");
+					var tr = trs[trs.length-1];
+					var tdCount = tr.getElementsByTagName("td").length;
+					if (tdCount < ROW_COUNT) {
+						var td = document.createElement("td");
+						td.setAttribute("class", "icon");
+						td.innerHTML = '<span class="mui-icon" onclick="deleteGroupMember()">—</span>';
+						tr.appendChild(td);
+					} else {
+						tr = document.createElement("tr");
+						var td = document.createElement("td");
+						td.setAttribute("class", "icon");
+						td.innerHTML = '<span class="mui-icon" onclick="deleteGroupMember()">—</span>';
+						tr.appendChild(td);
+						table.appendChild(tr);
+					}
+				}
+			});
+
+			function inviteGroupMember() {
+				mui.openWindow({
+					url : "invite.html",
+					id : "invite.html",
+					extras : {
+						groupId : currentView.groupInfo.id
+					}
+				});
+			}
+
+			function deleteGroupMember() {
+				mui.openWindow({
+					url : "deleteGroupMember.html",
+					id : "deleteGroupMember.html",
+					extras : {
+						groupMember : currentView.groupMember,
+						groupId : currentView.groupInfo.id
+					}
+				})
+			}
+
+			function openGroupDescription() {
+				mui.openWindow({
+					url : "groupDescription.html",
+					id : "groupDescription.html",
+					extras : {
+						description : currentView.groupInfo.description,
+						groupOwner : currentView.groupMember[0]
+					}
+				})
+			}
+			
+			function openGroupData() {
+				mui.openWindow({
+					url : "groupData.html",
+					id : "groupData.html",
+					extras : {
+						groupInfo : currentView.groupInfo
+					}
+				})
+			}
+			
+			//清空聊天记录
+			document.getElementById("clearChatRecords").addEventListener('tap', function() {
+				var btnArray = ['取消', '<span style="color:#cf2d28;">清空</span>'];
+				mui.confirm('确定清空群的聊天记录吗？', '提示', btnArray, function(e) {
+					if (e.index != 0) {
+						console.log('清空');
+						clearChatRecords("group" + currentView.groupInfo.id);
+						isClearRecords = true;
+						var chatView = plus.webview.getWebviewById("chat.html");
+						mui.fire(chatView, 'clearChatRecords', {});
+						mui.toast("已清空该群的聊天记录！");
+					}
+				}, "div")
+			});
+			
+			function clearChatRecords(filename) {
+				var localfilename = currentUser.username + "_file_" + filename;
+				localStorage.removeItem(localfilename);
+			}
+			
+			function dissolveGroup() {
+				var btnArray = ['取消', '<span style="color:#cf2d28;">解散</span>'];
+				mui.confirm('确定解散群聊吗？', '提示', btnArray, function(e) {
+					if (e.index != 0) {
+						mui.ajax({
+							url : contextPath + "/group/dissolveGroup.do?groupId=" + currentView.groupInfo.id,
+							success : function(r) {
+								if (r.isOk == "Y") {
+									mui.toast("已成功解散群聊！");
+									//清空缓存的群聊信息
+									clearCache();
+								}
+							}
+						})
+					}
+				}, "div")
+			}
+			
+			function quitGroup() {
+				var btnArray = ['取消', '<span style="color:#cf2d28;">退出</span>'];
+				mui.confirm('确定删除并退出群聊吗？', '提示', btnArray, function(e) {
+					if (e.index != 0) {
+						mui.ajax({
+							url : contextPath + "/group/quitGroup.do", 
+							data : {
+								groupId : currentView.groupInfo.id,
+								username : currentUser.username
+							},
+							success : function(r) {
+								if (r.isOk == "Y") {
+									mui.toast("已成功退出群聊！");
+									//清空缓存的群聊信息
+									clearCache();
+								}
+							}
+						})
+					}
+				}, "div")
+			}
+			
+			function clearCache() {
+				clearChatRecords("group" + currentView.groupInfo.id);
+				var groupsView = plus.webview.getWebviewById('groups.html');
+				mui.fire(groupsView, 'refreshPage', {});
+				var groupChatsView = plus.webview.getWebviewById('groupChats.html');
+				mui.fire(groupChatsView, 'refreshPage', {});
+				var chatView = plus.webview.getWebviewById("chat.html");
+				chatView.close();
+				currentView.close();
+			}
+			
+			window.addEventListener('refreshPage', function(event) {
+            	location.reload();
+            });
+            
+            window.addEventListener('updateGroupData', function(event) {
+            	currentView.groupInfo = event.detail.groupInfo;
+            	document.getElementById('mainContent').innerHTML = template('groupInfo-template', {
+					"groupInfo": currentView.groupInfo
+				});
+            });
+            
+            function generateBarcode() {
+            	mui.openWindow({
+            		url : "generateBarcode.html",
+            		id : "generateBarcode.html",
+            		extras : {
+						groupInfo : currentView.groupInfo
+					}
+            	})
+            }
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,401 @@
+{
+	"index.html": {
+		"resources": [
+			"js/mui.min.js",
+			"css/mui.min.css",
+			"fonts/mui.ttf",
+			"images/u9.png",
+			"images/header.png",
+			"js/serverUrl.js"
+		],
+		"refer": [
+			"pages/index/index.html",
+			"pages/userManage/login.html"
+		]
+	},
+	"pages/userManage/register.html": {
+		"resources": [
+			"images/u9.png",
+			"css/userManage/register.css",
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"css/mui.min.css",
+			"images/header.png",
+			"css/userManage/index.css",
+			"css/userManage/common.css",
+			"css/userManage/header.css",
+			"js/serverUrl.js"
+		]
+	},
+	"pages/userManage/login.html": {
+		"resources": [
+			"images/u9.png",
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"images/header.png",
+			"css/mui.min.css",
+			"css/userManage/common.css",
+			"pages/userManage/resetPassword.html",
+			"js/serverUrl.js"
+		],
+		"refer": [
+			"pages/userManage/register.html",
+			"pages/userManage/resetPassword.html",
+			"pages/index/index.html",
+			"pages/index/sharedLocation.html"
+		]
+	},
+	"pages/userManage/resetPassword.html": {
+		"resources": [
+			"pages/userManage/login.html",
+			"css/userManage/resetPassword.css",
+			"css/userManage/header.css",
+			"images/u9.png",
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"images/header.png",
+			"css/mui.min.css",
+			"css/userManage/common.css",
+			"pages/userManage/resetPassword.html"
+		],
+		"refer": [
+			"pages/userManage/login.html",
+			"pages/userManage/resetPassword.html"
+		]
+	},
+	"pages/index/index.html": {
+		"resources": [
+			"fonts/mui-icons-extra.ttf",
+			"css/index/common.css",
+			"css/icons-extra.css",
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"css/mui.min.css",
+			"pages/index/groupChats.html",
+			"css/index/index.css",
+			"css/muiExtends.css",
+			"js/muiExtends.js",
+			"css/index/sharedLocation.css",
+			"pages/index/group.html",
+			"css/index/groupInfo.css",
+			"js/swiper.min.js",
+			"css/index/groups.css",
+			"css/index/chatBubble.css",
+			"pages/index/groupInfo.html",
+			"css/swiper.min.css",
+			"pages/index/groups.html",
+			"pages/index/chatBubble.html",
+			"images/u16.png",
+			"js/serverUrl.js"
+		],
+		"refer": [
+			"pages/index/groupChats.html",
+			"pages/index/groups.html",
+			"pages/index/sharedLocation.html",
+			"pages/index/chatBubble.html",
+			"pages/index/group.html",
+			"pages/index/demo.html",
+			"pages/index/createGroup.html",
+			"pages/index/joinGroup.html",
+			"pages/index/searchGroups.html",
+			"pages/index/barcodeScan.html",
+			"pages/index/userInfo.html"
+		]
+	},
+	"pages/index/sharedLocation.html": {
+		"resources": [
+			"fonts/mui-icons-extra.ttf",
+			"css/index/common.css",
+			"css/icons-extra.css"
+		]
+	},
+	"pages/index/chatBubble.html": {
+		"resources": [
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"css/mui.min.css",
+			"css/index/common.css",
+			"css/icons-extra.css",
+			"css/index/chatBubble.css",
+			"images/u16.png",
+			"js/serverUrl.js"
+		],
+		"refer": [
+			"pages/index/edit.html",
+			"pages/index/modifyPassword.html",
+			"pages/userManage/login.html",
+			"pages/admin/groupsManage.html",
+			"pages/admin/usersManage.html"
+		]
+	},
+	"pages/index/groups.html": {
+		"resources": [
+			"fonts/mui.ttf",
+			"js/mui.min.js",
+			"css/mui.min.css",
+			"css/index/common.css",
+			"css/icons-extra.css",
+			"css/index/group.css",
+			"css/index/groups.css",
+			"js/commonHeader.js",
+			"js/serverUrl.js"
+		],
+		"refer": [
+			"pages/index/createGroup.html",
+			"pages/index/chat.html",
+			"pages/index/searchGroups.html",
+			"pages/index/barcodeScan.html"
+		]
+	},
+	"pages/index/createGroup.html": {
+		"resources": [
+			"js/mui.min.js",
+			"css/mui.min.css",
+			"css/index/common.css",
+			"css/icons-extra.css",
+			"fonts/mui.ttf",
+			"css/index/groupMaintain.css",
+			"pages/index/%3C%\u003d(userInfo.image)%%3E",
+			"images/u16.png",
+			"js/mui.picker.js",
+			"js/mui.poppicker.js",
+			"js/city.data-3.js",
+			"css/mui.poppicker.css",
+			"css/mui.picker.css",
+			"js/serverUrl.js"
+		]
+	},
+	"pages/index/groupChats.html": {
+		"resources": [
+			"fonts/mui.ttf",
+			"js/mui.min.js",
+			"css/mui.min.css",
+			"css/index/common.css",
+			"css/icons-extra.css",
+			"css/index/groupChats.css",
+			"images/u16.png",
+			"js/commonHeader.js",
+			"js/serverUrl.js"
+		],
+		"refer": [
+			"pages/index/chat.html",
+			"pages/index/searchGroups.html",
+			"pages/index/createGroup.html",
+			"pages/index/barcodeScan.html"
+		]
+	},
+	"pages/index/edit.html": {
+		"resources": [
+			"fonts/mui-icons-extra.ttf",
+			"css/index/edit.css",
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"css/mui.min.css",
+			"css/index/common.css",
+			"css/icons-extra.css",
+			"images/u16.png",
+			"js/arttmpl.js",
+			"js/serverUrl.js"
+		]
+	},
+	"pages/index/group.html": {
+		"resources": [
+			"css/index/group.css",
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"css/mui.min.css",
+			"css/index/common.css",
+			"css/icons-extra.css",
+			"pages/index/groupInfo.html",
+			"pages/index/index.html"
+		],
+		"refer": [
+			"pages/index/groupInfo.html",
+			"pages/index/index.html"
+		]
+	},
+	"pages/index/groupInfo.html": {
+		"resources": [
+			"css/index/groupInfo.css",
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"css/mui.min.css",
+			"css/index/common.css",
+			"css/icons-extra.css",
+			"pages/index/group.html",
+			"images/u16.png",
+			"js/arttmpl.js",
+			"js/serverUrl.js"
+		],
+		"refer": [
+			"pages/index/invite.html",
+			"pages/index/group.html",
+			"pages/index/userInfo.html",
+			"pages/index/groupDescription.html",
+			"pages/index/deleteGroupMember.html",
+			"pages/index/groupData.html",
+			"pages/index/generateBarcode.html"
+		]
+	},
+	"pages/index/invite.html": {
+		"resources": [
+			"css/index/invite.css",
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"css/mui.min.css",
+			"css/index/common.css",
+			"css/icons-extra.css",
+			"js/arttmpl.js"
+		],
+		"refer": [
+			"pages/index/groupInfo.html"
+		]
+	},
+	"pages/index/chat.html": {
+		"resources": [
+			"js/mui.imageViewer.js",
+			"css/app.css",
+			"css/mui.imageviewer.css",
+			"js/arttmpl.js",
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"css/mui.min.css",
+			"css/index/chat.css",
+			"js/audio2base64.js",
+			"js/file2base64.js",
+			"js/dateExtends.js",
+			"js/serverUrl.js"
+		],
+		"refer": [
+			"pages/index/userInfo.html",
+			"pages/index/groupInfo.html"
+		]
+	},
+	"pages/index/userInfo.html": {
+		"resources": [
+			"js/mui.min.js",
+			"css/mui.min.css",
+			"js/arttmpl.js",
+			"fonts/mui.ttf",
+			"js/serverUrl.js"
+		],
+		"refer": [
+			"pages/index/edit.html",
+			"pages/index/chat.html"
+		]
+	},
+	"pages/index/modifyPassword.html": {
+		"resources": [
+			"js/mui.min.js",
+			"css/mui.min.css",
+			"fonts/mui-icons-extra.ttf",
+			"fonts/mui.ttf",
+			"css/index/edit.css",
+			"css/index/common.css",
+			"css/icons-extra.css",
+			"pages/index/%3C%\u003d(headImage)%%3E",
+			"js/arttmpl.js"
+		]
+	},
+	"pages/index/groupDescription.html": {
+		"resources": [
+			"css/index/groupDescription.css",
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"css/mui.min.css",
+			"js/arttmpl.js"
+		]
+	},
+	"pages/index/deleteGroupMember.html": {
+		"resources": [
+			"js/mui.min.js",
+			"css/mui.min.css",
+			"css/index/deleteGroupMember.css",
+			"css/mui.indexedlist.css",
+			"js/mui.indexedlist.js",
+			"fonts/mui.ttf",
+			"images/u16.png"
+		]
+	},
+	"pages/index/groupData.html": {
+		"resources": [
+			"js/mui.picker.js",
+			"js/mui.poppicker.js",
+			"images/u16.png",
+			"css/mui.poppicker.css",
+			"css/mui.picker.css",
+			"js/city.data-3.js",
+			"css/index/groupMaintain.css",
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"css/mui.min.css",
+			"css/index/common.css",
+			"css/icons-extra.css",
+			"js/arttmpl.js"
+		]
+	},
+	"pages/index/joinGroup.html": {
+		"resources": [
+			"js/mui.min.js",
+			"pages/index/%3C%\u003d(headImage)%%3E",
+			"css/mui.min.css",
+			"css/index/groupMaintain.css",
+			"fonts/mui.ttf",
+			"css/index/common.css",
+			"js/arttmpl.js",
+			"js/serverUrl.js"
+		],
+		"refer": [
+			"pages/index/chat.html"
+		]
+	},
+	"pages/index/searchGroups.html": {
+		"resources": [
+			"css/index/searchGroups.css",
+			"js/mui.min.js",
+			"css/mui.min.css",
+			"fonts/mui.ttf",
+			"js/arttmpl.js",
+			"js/serverUrl.js"
+		],
+		"refer": [
+			"pages/index/joinGroup.html"
+		]
+	},
+	"pages/index/barcodeScan.html": {
+		"resources": [
+			"js/mui.min.js"
+		]
+	},
+	"pages/index/generateBarcode.html": {
+		"resources": [
+			"js/qrcode.js",
+			"css/index/generateBarcode.css",
+			"js/html2canvas.min.js",
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"css/mui.min.css",
+			"images/u16.png",
+			"js/serverUrl.js"
+		]
+	},
+	"pages/admin/groupsManage.html": {
+		"resources": [
+			"css/admin/groupManage.css",
+			"js/arttmpl.js",
+			"js/mui.min.js",
+			"css/mui.min.css",
+			"fonts/mui.ttf",
+			"css/admin/common.css"
+		]
+	},
+	"pages/admin/usersManage.html": {
+		"resources": [
+			"css/admin/common.css",
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"css/mui.min.css",
+			"js/arttmpl.js"
+		]
+	}
+}

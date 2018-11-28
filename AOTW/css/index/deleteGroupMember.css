@@ -1,0 +1,35 @@
+html,
+body {
+	height: 100%;
+	overflow: hidden;
+}
+.mui-bar {
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+.mui-media-body {
+	line-height: 40px;
+}
+.mui-table-view-cell.mui-checkbox input[type=checkbox]{
+	top: 16px;
+}
+.mui-indexed-list-bar {
+	background-color: #fff;
+}
+.mui-bar-nav {
+	background-color: #007AFF;
+}
+.mui-bar-nav h1 {
+	color: #fff;
+}
+.mui-bar-nav a {
+	color: #fff;
+}
+#done {
+	font-size: 16px;
+	margin-top: 4px;
+	font-weight: bold;
+}
+.mui-indexed-list-empty-alert {
+	color : #666;
+}

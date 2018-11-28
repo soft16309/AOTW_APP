@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<script src="js/mui.min.js"></script>
+		<script type="text/javascript" src="js/serverUrl.js" ></script>
+		<script type="text/javascript" charset="utf-8">
+			
+			mui.init()
+ 
+			mui.plusReady(function(){
+				if(localStorage.getItem("user") != null) {
+					mui.ajax({
+						url: contextPath + '/user/login.do',
+						type: 'post',
+						async: false,
+						data: {
+							"username": "username",
+							"password": "password",
+							"isRemeber": true
+						},
+						success: function(r) {
+							var user = r.data.user;
+							if(r.isOk == "Y" && user != null) {
+								localStorage.setItem("user", JSON.stringify(user));
+								localStorage.setItem("sessionId", r.data.sessionId);
+								mui.openWindow({
+									url: "pages/index/index.html",
+									id: "index.html"
+								});
+							} else {
+								mui.openWindow({
+									url: "pages/userManage/login.html",
+									id: "login.html"
+								});
+							}
+						}
+					});
+				} else {
+					mui.openWindow({
+						url: "pages/userManage/login.html",
+						id: "login.html"
+					});
+				}
+
+			})
+		</script>
+	</head>
+
+	<body style="background-color: #fff;height: 100%;">
+		<div class="" style="position:fixed; bottom:0;background-color: #007AFF;text-align: center;width: 100%;"><img style="margin: 2vh auto;" src="images/header.png" /></div>
+	</body>
+
+</html>
