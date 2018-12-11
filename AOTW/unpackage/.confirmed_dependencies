@@ -25,7 +25,8 @@
 			"css/userManage/common.css",
 			"css/userManage/header.css",
 			"js/serverUrl.js"
-		]
+		],
+		"refer": []
 	},
 	"pages/userManage/login.html": {
 		"resources": [
@@ -56,7 +57,8 @@
 			"images/header.png",
 			"css/mui.min.css",
 			"css/userManage/common.css",
-			"pages/userManage/resetPassword.html"
+			"pages/userManage/resetPassword.html",
+			"js/serverUrl.js"
 		],
 		"refer": [
 			"pages/userManage/login.html",
@@ -107,7 +109,8 @@
 			"fonts/mui-icons-extra.ttf",
 			"css/index/common.css",
 			"css/icons-extra.css"
-		]
+		],
+		"refer": []
 	},
 	"pages/index/chatBubble.html": {
 		"resources": [
@@ -162,7 +165,11 @@
 			"js/city.data-3.js",
 			"css/mui.poppicker.css",
 			"css/mui.picker.css",
-			"js/serverUrl.js"
+			"js/serverUrl.js",
+			"js/file2base64.js"
+		],
+		"refer": [
+			"pages/index/clipImage.html"
 		]
 	},
 	"pages/index/groupChats.html": {
@@ -195,7 +202,11 @@
 			"css/icons-extra.css",
 			"images/u16.png",
 			"js/arttmpl.js",
-			"js/serverUrl.js"
+			"js/serverUrl.js",
+			"js/file2base64.js"
+		],
+		"refer": [
+			"pages/index/clipImage.html"
 		]
 	},
 	"pages/index/group.html": {
@@ -294,8 +305,10 @@
 			"css/index/common.css",
 			"css/icons-extra.css",
 			"pages/index/%3C%\u003d(headImage)%%3E",
-			"js/arttmpl.js"
-		]
+			"js/arttmpl.js",
+			"js/serverUrl.js"
+		],
+		"refer": []
 	},
 	"pages/index/groupDescription.html": {
 		"resources": [
@@ -304,7 +317,8 @@
 			"fonts/mui.ttf",
 			"css/mui.min.css",
 			"js/arttmpl.js"
-		]
+		],
+		"refer": []
 	},
 	"pages/index/deleteGroupMember.html": {
 		"resources": [
@@ -314,8 +328,10 @@
 			"css/mui.indexedlist.css",
 			"js/mui.indexedlist.js",
 			"fonts/mui.ttf",
-			"images/u16.png"
-		]
+			"images/u16.png",
+			"js/serverUrl.js"
+		],
+		"refer": []
 	},
 	"pages/index/groupData.html": {
 		"resources": [
@@ -331,7 +347,12 @@
 			"css/mui.min.css",
 			"css/index/common.css",
 			"css/icons-extra.css",
-			"js/arttmpl.js"
+			"js/arttmpl.js",
+			"js/serverUrl.js",
+			"js/file2base64.js"
+		],
+		"refer": [
+			"pages/index/clipImage.html"
 		]
 	},
 	"pages/index/joinGroup.html": {
@@ -365,7 +386,8 @@
 	"pages/index/barcodeScan.html": {
 		"resources": [
 			"js/mui.min.js"
-		]
+		],
+		"refer": []
 	},
 	"pages/index/generateBarcode.html": {
 		"resources": [
@@ -377,7 +399,8 @@
 			"css/mui.min.css",
 			"images/u16.png",
 			"js/serverUrl.js"
-		]
+		],
+		"refer": []
 	},
 	"pages/admin/groupsManage.html": {
 		"resources": [
@@ -387,7 +410,8 @@
 			"css/mui.min.css",
 			"fonts/mui.ttf",
 			"css/admin/common.css"
-		]
+		],
+		"refer": []
 	},
 	"pages/admin/usersManage.html": {
 		"resources": [
@@ -395,7 +419,20 @@
 			"js/mui.min.js",
 			"fonts/mui.ttf",
 			"css/mui.min.css",
-			"js/arttmpl.js"
+			"js/arttmpl.js",
+			"js/serverUrl.js"
+		],
+		"refer": []
+	},
+	"pages/index/clipImage.html": {
+		"resources": [
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"css/mui.min.css",
+			"js/jquery.min.js",
+			"js/cropper.min.js",
+			"css/cropper.min.css",
+			"js/file2base64.js"
 		]
 	}
 }

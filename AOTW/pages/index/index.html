@@ -261,6 +261,7 @@
 								markerPosition(map, currentPosition, currentUser);
 								if(r.data.userList) {
 									var userList = r.data.userList;
+									userList.push(r.data.groupOwner);
 									for(var i = 0; i < userList.length; i++) {
 										var position = JSON.parse(userList[i].location);
 										markerPosition(map, position, userList[i]);

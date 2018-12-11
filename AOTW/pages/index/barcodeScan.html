@@ -22,6 +22,7 @@
 				ws.addEventListener('show', function(){
 					scan=new plus.barcode.Barcode('bcid');
 				    scan.onmarked=onmarked;
+				    scan.start({conserve:true,filename:'_doc/barcode/'});
 				}, false);
 			}
 			if(window.plus){

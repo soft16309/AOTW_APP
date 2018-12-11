@@ -59,20 +59,20 @@
 				if (!validate()) {
 					return;
 				}
-				
+				var username = usernameText.value;
+				var password = passwordText.value;
+				var email = emailText.value;
 				mui.ajax({
 					url: contextPath + '/user/quickRegister.do',
 					type: 'post',
 					async : false,
 					data: {
-						user : {
-							"username" : usernameText.value, 
-							"password" : passwordText.value,
-							"email"	: emailText.value
-						}
+						"username" : username, 
+						"password" : password,
+						"email"	: email
 					},
 					success: function(r) {
-						if (r.data.isOk == "Y") {
+						if (r.isOk == "Y") {
 							mui.toast('注册成功！');
 							mui.openWindow({
 								url : "login.html",
@@ -92,6 +92,14 @@
 				if (usernameText.value.trim() == "") {
 					usernameText.value = "";
 					mui.toast("登录名不能为空！");
+					return false;
+				}
+				if (usernameText.value.length > 10) {
+					mui.toast("用户名长度不能大于10位");
+					return false;
+				}
+				if (!/^[A-Za-z]/.test(usernameText.value[0])) {
+					mui.toast("用户名必须以字母开头");
 					return false;
 				}
 				if (passwordText.value == "") {

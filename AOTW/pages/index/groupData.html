@@ -102,6 +102,7 @@
 		<script type="text/javascript" src="../../js/city.data-3.js" ></script>
 		<script src="../../js/arttmpl.js"></script>
 		<script type="text/javascript" src="../../js/serverUrl.js" ></script>
+		<script type="text/javascript" src="../../js/file2base64.js" ></script>
 		<script type="text/javascript">
 			var currentUser = JSON.parse(localStorage.getItem('user'));
 			
@@ -156,14 +157,31 @@
 							case 1:
 								var cmr = plus.camera.getCamera();
 								cmr.captureImage(function(path) {
-									groupImage.src = "file://" + plus.io.convertLocalFileSystemURL(path);
-									isImageUpdate = true;
+//									groupImage.src = "file://" + plus.io.convertLocalFileSystemURL(path);
+//									isImageUpdate = true;
+									var filepath = "file://" + plus.io.convertLocalFileSystemURL(path);
+									mui.openWindow({
+										createNew : true,
+										url : 'clipImage.html',
+										id : 'clipImage.html',
+										extras : {
+											filePath : filepath
+										}
+									})
 								}, function(err) {});
 								break;
 							case 2:
 								plus.gallery.pick(function(path) {
-									groupImage.src = path;
-									isImageUpdate = true;
+//									groupImage.src = path;
+//									isImageUpdate = true;
+									mui.openWindow({
+										createNew : true,
+										url : 'clipImage.html',
+										id : 'clipImage.html',
+										extras : {
+											filePath : path
+										}
+									})
 								}, function(err) {}, null);
 								break;
 						}
@@ -262,43 +280,59 @@
 				//绑定创建按钮的点击事件
 				document.getElementById('saveButton').onclick = function() {
 					var name = document.getElementById("group-name").getElementsByClassName('info-content')[0];
-					console.log("a1")
 					if (name.innerText.trim() == "") {
 						mui.toast('群名称不能为空！');
 						return;
 					}
-					console.log("a2")
 					var description = document.getElementById("group-description");
 					groupInfo.name = name.innerText;
 					groupInfo.description = description.value;
 					
 					if (isImageUpdate) {
-						console.log("a3")
 						saveInfoWithImage();
 					} else {
-						console.log("a4")
 						saveInfo();
 					}
 				}
 				
+//				function saveInfoWithImage() {
+//	                var task = plus.uploader.createUpload(contextPath +"/upload/upload.do", 
+//	                    { method:"POST",blocksize:204800,priority:100 },
+//	                    function (t,status) {
+//	                        // 上传完成
+//	                        console.log(JSON.stringify(t));
+//	                        if (status == 200) { 
+//	                        	var r = JSON.parse(t.responseText);
+//	                            groupInfo.image = r.data.path;
+//	                            saveInfo();
+//	                        } else {
+//	                            alert("上传头像失败: " + status);
+//	                        }
+//	                    }
+//	                );
+//	                task.addFile(groupImage.src, {key:"file"} );
+//	                task.start();
+//	            }
+				
 				function saveInfoWithImage() {
-	                var task = plus.uploader.createUpload(contextPath +"/upload/upload.do", 
-	                    { method:"POST",blocksize:204800,priority:100 },
-	                    function (t,status) {
-	                        // 上传完成
-	                        console.log(JSON.stringify(t));
-	                        if (status == 200) { 
-	                        	var r = JSON.parse(t.responseText);
-	                            groupInfo.image = r.data.path;
-	                            saveInfo();
-	                        } else {
-	                            alert("上传头像失败: " + status);
-	                        }
-	                    }
-	                );
-	                task.addFile(groupImage.src, {key:"file"} );
-	                task.start();
-	            }
+					if (imgFormData) {
+						mui.ajax({
+							url : contextPath +"/upload/upload.do",
+							type : "POST",
+							data : imgFormData,
+							processData : false,
+							contentType : false,
+							success : function(r) {
+								if (r.isOk == "Y") {
+									groupInfo.image = r.data.path;
+	                          		saveInfo();
+								} else {
+									mui.toast(r.msg);
+								}
+							}
+						})
+					}
+				}
 				
 				function saveInfo() {
 					mui.ajax({
@@ -322,6 +356,15 @@
 						}
 					})
 				}
+				
+				//回显裁剪后的图片
+				window.addEventListener('showCropImage', function(event) {
+					groupImage.src = event.detail.filePath;
+					isImageUpdate = true;
+					var blob = dataURLToBlob(event.detail.filePath);
+					imgFormData = new FormData();
+			        imgFormData.append("file", blob, new Date().getTime() + '.jpeg');
+				})
 			})
 		</script>
 	</body>

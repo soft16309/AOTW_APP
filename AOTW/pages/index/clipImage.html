@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link rel="stylesheet" type="text/css" href="../../css/mui.min.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/cropper.min.css"/>
+		<style>
+			.mui-bar-nav a.mui-icon {
+				color: #fff;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav" style="background: #007AFF;">
+		    <a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+		    <a class="mui-icon mui-pull-right" style="font-size: 0.9em;margin-top: 4px;" id="useBtn">使用</a>
+		</header>
+		<img src="" class="wait-crop" style="width: 100%;">
+		
+		<script type="text/javascript" src="../../js/mui.min.js"></script>
+		<script type="text/javascript" src="../../js/jquery.min.js" ></script>
+		<script type="text/javascript" src="../../js/cropper.min.js" ></script>
+		<script type="text/javascript">
+			mui.init()
+			var currentView;
+		    mui.plusReady(function() {
+		    	currentView = plus.webview.currentWebview();
+		    	var src = currentView.filePath;
+		    	$('.wait-crop').attr('src', src);
+		    	$('.wait-crop').cropper({
+			        aspectRatio: 1 / 1,
+			        autoCropArea: .9,
+			        resizable : false,
+			        viewMode : 1,
+			        dragMode : 'move'
+			    });
+		    });
+		    
+		    document.getElementById('useBtn').addEventListener('tap', function(event) {
+		    	var cropCanvas = $('.wait-crop').cropper('getCroppedCanvas');
+		    	var cropUrl = cropCanvas.toDataURL('image/jpeg', 0.4);
+		    	var preWebview = currentView.opener();
+		    	
+		    	mui.fire(preWebview, 'showCropImage', {
+					filePath : cropUrl
+           		});
+           		plus.webview.currentWebview().close();
+		    })
+		</script>
+	</body>
+
+</html>

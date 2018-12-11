@@ -157,7 +157,8 @@
 									mui.toast("已成功加入群聊");
 									isGroupMember = true;
 									document.getElementById('button').innerHTML = template('button-template', {
-										"isGroupMember" : isGroupMember
+										"isGroupMember" : isGroupMember,
+										"isGroupEnable" : true
 									});
 								} else {
 									alert(r.msg);
